@@ -4,6 +4,42 @@ import yaml
 
 version = 0.1
 
+class GameLauncher:
+    def __init__(self, scr):
+        self.__scr = scr
+
+    def push_menu(self, menu):
+        pass
+
+    def pop_menu(self):
+        pass
+
+    def run(self):
+        while not exiting:
+            getch()
+
+class LoginMenu:
+    def __init__(self, app):
+        pass
+
+    def key(self, c):
+        pass
+
+class ChoiceRunner:
+    def __init__(self, app):
+        self.__app = app
+
+    def run(self, command):
+        parts = command.split(' ')
+        self.__commands[parts[0]](parts[1:]])
+
+    def login(self, args):
+        self.__app.push_menu(LoginMenu(self.__app))
+
+    __commands = {
+        "login" : login
+    }
+
 class Menu:
     def __init__(self, y):
         self.__order = y
@@ -22,6 +58,8 @@ class Menu:
 
 
 def run(scr):
+    game = GameLauncher(scr)
+
     scr.addstr(1, 1, "Python Game Launcher: v{}".format(version))
 
     f = open("menus.yaml")
