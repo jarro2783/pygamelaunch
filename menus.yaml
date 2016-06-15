@@ -2,6 +2,18 @@ main:
   - key: l
     title: login
     action: login
+  - key: w
+    title: watch games in progress
+    action: watch
+  - key: q
+    title: quit
+    action: quit
+
+loggedin:
+  - key: w
+    title: watch games in progress
+    action: watch
+  - games
   - key: q
     title: quit
     action: quit

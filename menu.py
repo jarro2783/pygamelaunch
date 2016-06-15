@@ -10,11 +10,12 @@ import hashlib
 version = 0.1
 
 class GameLauncher:
-    def __init__(self, scr):
+    def __init__(self, scr, menus):
         self.__scr = scr
-        self.__menus = []
+        self.__menustack = []
         self.__exiting = False
         self.__user = ""
+        self.__menus = menus
 
         self.__database = db.Database()
 
@@ -25,14 +26,21 @@ class GameLauncher:
         scr.addstr(1, 1, "Pygamelaunch v{}".format(version))
         scr.refresh()
 
+        self.push_menu("main")
+
     def push_menu(self, menu):
-        self.__menus.append(menu)
+        if isinstance(menu, str):
+            menu = Menu(self.__menus[menu], self)
+        self.__push_menu(menu)
+
+    def __push_menu(self, menu):
+        self.__menustack.append(menu)
         self.__window.clear()
         menu.draw()
         self.__window.refresh()
 
     def pop_menu(self):
-        self.__menus.pop()
+        self.__menustack.pop()
         self.__window.clear()
         self.__top().draw()
         self.__window.refresh()
@@ -46,7 +54,7 @@ class GameLauncher:
         self.__exiting = True
 
     def __top(self):
-        return self.__menus[-1]
+        return self.__menustack[-1]
 
     def screen(self):
         return self.__window
@@ -62,6 +70,11 @@ class GameLauncher:
             if sha.digest() == u.password:
                 self.__user = user
                 self.__scr.addstr(3, 1, user)
+                self.push_menu("loggedin")
+
+    def generate_menus(self, name):
+        if name == "games":
+            return []
         
 class KeyInput:
     def __init__(self, echo):
@@ -139,16 +152,27 @@ class Menu:
     def __init__(self, y, app):
         self.__runner = ChoiceRunner(app)
         self.__app = app
-        self.__order = y
+        self.__order = []
         self.__keys = {}
+        # menus can either be an array describing the menu,
+        # or a string that the engine expands to some menu items
         for f in y:
-            self.__keys[ord(f['key'])] = f
+            if isinstance(f, str):
+                menus = app.generate_menus(f)
+                for i in menus:
+                    self.__add_item(i)
+            else:
+                self.__add_item(f)
+
+    def __add_item(self, f):
+        self.__keys[ord(f['key'])] = f
+        self.__order.append(f)
 
     def draw(self):
         i = 4
         scr = self.__app.screen()
         for f in self.__order:
-            scr.addstr(i, 2, "({}) {}".format(f['key'], f['title']))
+            scr.addstr(i, 2, "{}) {}".format(f['key'], f['title']))
             i += 1
 
     def key(self, c):
@@ -161,15 +185,11 @@ class Menu:
 
 
 def run(scr):
-    game = GameLauncher(scr)
 
     f = open("menus.yaml")
     m = yaml.load(f)
 
-    main = m['main']
-    
-    menu = Menu(main, game)
-    game.push_menu(menu)
+    game = GameLauncher(scr, m)
 
     game.run()
 
