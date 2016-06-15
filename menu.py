@@ -70,10 +70,10 @@ class KeyInput:
 
     def key(self, c):
         if c == ord('\n'):
-            self.finished(self.text)
+            self.finished(self.__text)
         else:
             ch = chr(c)
-            self.text += ch
+            self.__text += ch
 
             if self.echo:
                 scr = self.app.screen()
@@ -82,6 +82,7 @@ class KeyInput:
 
 class UserNameMenu(KeyInput):
     def __init__(self, app):
+        super().__init__(True)
         self.app = app
         self.__user = ""
         self.text = ""
@@ -96,6 +97,7 @@ class UserNameMenu(KeyInput):
 
 class PasswordMenu(KeyInput):
     def __init__(self, app, user):
+        super().__init__(False)
         self.app = app
         self.__user = user
         self.text = ""
