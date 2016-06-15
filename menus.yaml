@@ -2,7 +2,6 @@ main:
   - key: l
     title: login
     action: login
-  - games
   - key: q
     title: quit
     action: quit
