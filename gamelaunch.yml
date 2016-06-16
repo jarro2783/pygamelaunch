@@ -1,0 +1,27 @@
+menus:
+    reuse:
+      - &watch
+        key: w
+        title: watch games in progress
+        action: watch
+
+    main:
+      - key: l
+        title: login
+        action: login
+      - *watch
+      - key: q
+        title: quit
+        action: quit
+
+    loggedin:
+      - *watch
+      - games
+      - key: q
+        title: quit
+        action: quit
+
+games:
+    - name: Nethack 3.6.0
+      env: NETHACKOPTIONS=@{config_path}
+      arguments: "-u {user}"

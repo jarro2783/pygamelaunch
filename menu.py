@@ -10,7 +10,8 @@ import hashlib
 version = 0.1
 
 class GameLauncher:
-    def __init__(self, scr, menus):
+    def __init__(self, scr, config):
+        menus = config['menus']
         self.__scr = scr
         self.__menustack = []
         self.__exiting = False
@@ -18,6 +19,8 @@ class GameLauncher:
         self.__menus = menus
 
         self.__database = db.Database()
+
+        self.__init_games(config['games'])
 
         y,x = scr.getmaxyx()
         ry = 4
@@ -27,6 +30,9 @@ class GameLauncher:
         scr.refresh()
 
         self.push_menu("main")
+
+    def __init_games(self, games):
+        self.__games = games
 
     def push_menu(self, menu):
         if isinstance(menu, str):
@@ -69,12 +75,22 @@ class GameLauncher:
 
             if sha.digest() == u.password:
                 self.__user = user
-                self.__scr.addstr(3, 1, user)
+                self.__scr.addstr(3, 1, "Logged in as: {}".format(user))
                 self.push_menu("loggedin")
 
     def generate_menus(self, name):
         if name == "games":
-            return []
+            i = 1
+            games = []
+            for f in self.__games:
+                games.append({
+                    "key" : chr(ord('0') + i),
+                    "title" : f['name'],
+                    "action" : "play {}".format(i - 1)
+                })
+                i += 1
+
+            return games
         
 class KeyInput:
     def __init__(self, echo):
@@ -120,8 +136,6 @@ class PasswordMenu(KeyInput):
         scr = self.app.screen()
         y, x = scr.getyx()
         scr.hline(1,1, ' ', x)
-        scr.addstr(1, 1, "Login successful")
-        scr.refresh()
         self.app.pop_menu()
         self.app.login(self.__user, text)
 
@@ -169,10 +183,10 @@ class Menu:
         self.__order.append(f)
 
     def draw(self):
-        i = 4
+        i = 1
         scr = self.__app.screen()
         for f in self.__order:
-            scr.addstr(i, 2, "{}) {}".format(f['key'], f['title']))
+            scr.addstr(i, 1, "{}) {}".format(f['key'], f['title']))
             i += 1
 
     def key(self, c):
@@ -186,7 +200,7 @@ class Menu:
 
 def run(scr):
 
-    f = open("menus.yaml")
+    f = open("gamelaunch.yml")
     m = yaml.load(f)
 
     game = GameLauncher(scr, m)
