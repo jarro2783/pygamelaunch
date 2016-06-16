@@ -81,7 +81,7 @@ class GameLauncher:
     def generate_menus(self, name):
         if name == "games":
             i = 1
-            games = []
+            games = ["blank"]
             for f in self.__games:
                 games.append({
                     "key" : chr(ord('0') + i),
@@ -90,7 +90,10 @@ class GameLauncher:
                 })
                 i += 1
 
+            games.append("blank")
             return games
+        elif name == "blank":
+            return "blank"
         
 class KeyInput:
     def __init__(self, echo):
@@ -166,12 +169,12 @@ class Menu:
     def __init__(self, y, app):
         self.__runner = ChoiceRunner(app)
         self.__app = app
-        self.__order = []
+        self.__lines = []
         self.__keys = {}
         # menus can either be an array describing the menu,
         # or a string that the engine expands to some menu items
         for f in y:
-            if isinstance(f, str):
+            if f is not "blank" and isinstance(f, str):
                 menus = app.generate_menus(f)
                 for i in menus:
                     self.__add_item(i)
@@ -179,14 +182,17 @@ class Menu:
                 self.__add_item(f)
 
     def __add_item(self, f):
-        self.__keys[ord(f['key'])] = f
-        self.__order.append(f)
+        if f == "blank":
+            self.__lines.append("")
+        else:
+            self.__keys[ord(f['key'])] = f
+            self.__lines.append("{}) {}".format(f['key'], f['title']))
 
     def draw(self):
         i = 1
         scr = self.__app.screen()
-        for f in self.__order:
-            scr.addstr(i, 1, "{}) {}".format(f['key'], f['title']))
+        for f in self.__lines:
+            scr.addstr(i, 1, f)
             i += 1
 
     def key(self, c):
