@@ -1,27 +1,57 @@
-menus:
-    reuse:
-      - &watch
-        key: w
-        title: watch games in progress
-        action: watch
+templates:
+  - &watch
+    key: w
+    title: watch games in progress
+    action: watch
+  - &options
+    key: o
+    title: edit game options
+    action: edit {{ game.options }}
+  - &play
+    key: p
+    title: Play {{ game.name }}
+    action: play
+  - &changepass
+    key: c
+    title: Change Password
+    action: changepass
+  - &changeemail
+    key: e
+    title: Change Email
+    action: changeemail
+  - &register
+    key: r
+    title: Register New User
+    action: register
+  - &quit
+    key: q
+    title: quit
+    action: quit
+  - &login
+    key: l
+    title: login
+    action: login
 
+
+menus:
     main:
-      - key: l
-        title: login
-        action: login
+      - *register
+      - *login
       - *watch
-      - key: q
-        title: quit
-        action: quit
+      - *quit
 
     loggedin:
+      - *changepass
+      - *changeemail
       - *watch
       - games
-      - key: q
-        title: quit
-        action: quit
+      - *quit
 
 games:
     - name: Nethack 3.6.0
-      env: NETHACKOPTIONS=@{config_path}
-      arguments: "-u {user}"
+      env: NETHACKOPTIONS=@{{config_path}}
+      arguments: "-u {{ user }}"
+      menu:
+        - *watch
+        - *options
+        - *play

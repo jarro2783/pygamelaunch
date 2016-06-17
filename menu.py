@@ -86,7 +86,7 @@ class GameLauncher:
                 games.append({
                     "key" : chr(ord('0') + i),
                     "title" : f['name'],
-                    "action" : "play {}".format(i - 1)
+                    "action" : "game {}".format(i - 1)
                 })
                 i += 1
 
