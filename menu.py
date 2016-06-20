@@ -11,9 +11,9 @@ import yaml
 
 version = 0.1
 
-def render_template(t, args):
+def render_template(t, **kwargs):
     tem = Template(t)
-    return tem.render(args)
+    return tem.render(kwargs)
 
 class GameLauncher:
     def __init__(self, scr, config):
@@ -23,6 +23,7 @@ class GameLauncher:
         self.__exiting = False
         self.__user = ""
         self.__menus = menus
+        self.__template_args = {}
 
         self.__database = db.Database()
 
@@ -63,21 +64,25 @@ class GameLauncher:
 
     def pop_menu(self):
         self.__menustack.pop()
-        self.__window.clear()
-        self.__top().draw()
-        self.__window.refresh()
+
+        if len(self.__menustack) > 0:
+            self.__window.clear()
+            self.__top().draw()
+            self.__window.refresh()
 
     def game_menu(self, n):
         g = self.__games[n]
         self.__push_menu(Menu(g['menu'], self, game=g))
 
     def run(self):
-        while not self.__exiting:
+        while not self.__exiting and len(self.__menustack) > 0:
             c = self.__scr.getch()
             self.__top().key(c)
 
     def quit(self):
-        self.__exiting = True
+        #self.__exiting = True
+        if len(self.__menustack) > 0:
+            self.pop_menu()
 
     def __top(self):
         return self.__menustack[-1]
@@ -94,7 +99,9 @@ class GameLauncher:
             sha.update(pw.encode('utf-8'))
 
             if sha.digest() == u.password:
+                self.pop_menu()
                 self.__user = user
+                self.__template_args['user'] = user
                 self.__scr.addstr(3, 1, "Logged in as: {}".format(user))
                 self.push_menu("loggedin")
 
@@ -114,14 +121,16 @@ class GameLauncher:
         elif name == "blank":
             return "blank"
 
-    def replace_params(self, s):
+    def render_template(self, s, **kwargs):
         if isinstance(s, list):
             result = []
             for t in s:
-                result.append(self.replace_params(t))
+                result.append(self.render_template(t, **kwargs))
             return result
         else:
-            return render_template(s, {'user': self.__user})
+            newargs = self.__template_args
+            newargs.update(kwargs)
+            return render_template(s, **newargs)
 
     def play(self, n):
         g = self.__games[n]
@@ -132,8 +141,8 @@ class GameLauncher:
             for v in g['volumes']:
                 args.append("-v")
                 volume = "{}:{}".format(
-                  self.replace_params(v[0]),
-                  self.replace_params(v[1])
+                  self.render_template(v[0]),
+                  self.render_template(v[1])
                 )
                 args.append(volume)
 
@@ -141,21 +150,21 @@ class GameLauncher:
         if 'arguments' in g:
             a = g['arguments']
             if isinstance(a, list):
-                args.extend(self.replace_params(a))
+                args.extend(self.render_template(a))
             else:
-                args.append(self.replace_params(a))
+                args.append(self.render_template(a))
 
         curses.endwin()
         pid = os.fork()
 
         if pid == 0:
+            print("Loading...")
             os.execv("/usr/bin/docker", args)
         else:
             os.waitpid(pid, 0)
 
         self.__scr = curses.initscr()
         self.init_curses()
-
         
 class KeyInput:
     def __init__(self, echo):
@@ -214,7 +223,7 @@ class ChoiceRunner:
         self.__args = kwargs
 
     def run(self, command):
-        parts = render_template(command, self.__args).split(' ')
+        parts = self.__app.render_template(command, **self.__args).split(' ')
         self.__commands[parts[0]](self, parts[1:])
 
     def login(self, args):
@@ -257,7 +266,7 @@ class Menu:
         if f == "blank":
             self.__lines.append("")
         else:
-            text = render_template(f['title'], self.__args)
+            text = self.__app.render_template(f['title'], **self.__args)
             self.__keys[ord(f['key'])] = f
             self.__lines.append("{}) {}".format(f['key'], text))
 
