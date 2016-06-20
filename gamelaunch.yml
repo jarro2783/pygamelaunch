@@ -31,7 +31,9 @@ templates:
     key: l
     title: login
     action: login
-
+  - &return
+    << : *quit
+    title : Return to game menu
 
 menus:
     main:
@@ -54,6 +56,8 @@ games:
         - *watch
         - *options
         - *play
+        - *return
+
       volumes: 
         - ["/home/nh360/{{user}}/config.txt", "/home/player/.nethackrc"]
         - ["/home/jarryd/nhinstall/game", "/home/nethack/game"]
