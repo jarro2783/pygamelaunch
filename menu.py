@@ -1,13 +1,19 @@
 #!/usr/bin/python3
 
 import curses
+import db
+import hashlib
+from jinja2 import Template
+import os
 import sys
 import time
 import yaml
-import db
-import hashlib
 
 version = 0.1
+
+def render_template(t, args):
+    tem = Template(t)
+    return tem.render(args)
 
 class GameLauncher:
     def __init__(self, scr, config):
@@ -22,6 +28,12 @@ class GameLauncher:
 
         self.__init_games(config['games'])
 
+        self.init_curses()
+
+        self.push_menu("main")
+
+    def init_curses(self):
+        scr = self.__scr
         y,x = scr.getmaxyx()
         ry = 4
 
@@ -29,10 +41,14 @@ class GameLauncher:
         scr.addstr(1, 1, "Pygamelaunch v{}".format(version))
         scr.refresh()
 
-        self.push_menu("main")
 
     def __init_games(self, games):
         self.__games = games
+
+        i = 0
+        for f in self.__games:
+            f['number'] = i
+            i += 1
 
     def push_menu(self, menu):
         if isinstance(menu, str):
@@ -50,6 +66,10 @@ class GameLauncher:
         self.__window.clear()
         self.__top().draw()
         self.__window.refresh()
+
+    def game_menu(self, n):
+        g = self.__games[n]
+        self.__push_menu(Menu(g['menu'], self, game=g))
 
     def run(self):
         while not self.__exiting:
@@ -80,20 +100,62 @@ class GameLauncher:
 
     def generate_menus(self, name):
         if name == "games":
-            i = 1
             games = ["blank"]
             for f in self.__games:
+                i = f['number']
                 games.append({
-                    "key" : chr(ord('0') + i),
+                    "key" : chr(ord('0') + i + 1),
                     "title" : f['name'],
-                    "action" : "game {}".format(i - 1)
+                    "action" : "game {}".format(i)
                 })
-                i += 1
 
             games.append("blank")
             return games
         elif name == "blank":
             return "blank"
+
+    def replace_params(self, s):
+        if isinstance(s, list):
+            result = []
+            for t in s:
+                result.append(self.replace_params(t))
+            return result
+        else:
+            return render_template(s, {'user': self.__user})
+
+    def play(self, n):
+        g = self.__games[n]
+
+        args = ["docker", "run", "--rm", "-it"]
+
+        if 'volumes' in g:
+            for v in g['volumes']:
+                args.append("-v")
+                volume = "{}:{}".format(
+                  self.replace_params(v[0]),
+                  self.replace_params(v[1])
+                )
+                args.append(volume)
+
+        args.append(g['image'])
+        if 'arguments' in g:
+            a = g['arguments']
+            if isinstance(a, list):
+                args.extend(self.replace_params(a))
+            else:
+                args.append(self.replace_params(a))
+
+        curses.endwin()
+        pid = os.fork()
+
+        if pid == 0:
+            os.execv("/usr/bin/docker", args)
+        else:
+            os.waitpid(pid, 0)
+
+        self.__scr = curses.initscr()
+        self.init_curses()
+
         
 class KeyInput:
     def __init__(self, echo):
@@ -147,30 +209,40 @@ class PasswordMenu(KeyInput):
         scr.addstr(1, 1, "Enter your password: ")
 
 class ChoiceRunner:
-    def __init__(self, app):
+    def __init__(self, app, **kwargs):
         self.__app = app
+        self.__args = kwargs
 
     def run(self, command):
-        parts = command.split(' ')
+        parts = render_template(command, self.__args).split(' ')
         self.__commands[parts[0]](self, parts[1:])
 
     def login(self, args):
         self.__app.push_menu(UserNameMenu(self.__app))
 
+    def game(self, args):
+        self.__app.game_menu(int(args[0]))
+
     def quit(self, args):
         self.__app.quit()
 
+    def play(self, args):
+        self.__app.play(int(args[0]))
+
     __commands = {
         "login" : login,
+        "play" : play,
+        "game" : game,
         "quit" : quit
     }
 
 class Menu:
-    def __init__(self, y, app):
-        self.__runner = ChoiceRunner(app)
+    def __init__(self, y, app, **kwargs):
+        self.__runner = ChoiceRunner(app, **kwargs)
         self.__app = app
         self.__lines = []
         self.__keys = {}
+        self.__args = kwargs
         # menus can either be an array describing the menu,
         # or a string that the engine expands to some menu items
         for f in y:
@@ -185,8 +257,9 @@ class Menu:
         if f == "blank":
             self.__lines.append("")
         else:
+            text = render_template(f['title'], self.__args)
             self.__keys[ord(f['key'])] = f
-            self.__lines.append("{}) {}".format(f['key'], f['title']))
+            self.__lines.append("{}) {}".format(f['key'], text))
 
     def draw(self):
         i = 1

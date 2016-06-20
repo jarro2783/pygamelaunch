@@ -10,7 +10,7 @@ templates:
   - &play
     key: p
     title: Play {{ game.name }}
-    action: play
+    action: play {{ game.number }}
   - &changepass
     key: c
     title: Change Password
@@ -49,9 +49,12 @@ menus:
 
 games:
     - name: Nethack 3.6.0
-      env: NETHACKOPTIONS=@{{config_path}}
-      arguments: "-u {{ user }}"
+      arguments: ["-u", "{{ user }}"]
       menu:
         - *watch
         - *options
         - *play
+      volumes: 
+        - ["/home/nh360/{{user}}/config.txt", "/home/player/.nethackrc"]
+        - ["/home/jarryd/nhinstall/game", "/home/nethack/game"]
+      image: nethack
