@@ -59,7 +59,7 @@ class GameLauncher:
     def __push_menu(self, menu):
         self.__menustack.append(menu)
         self.__window.clear()
-        menu.draw()
+        menu.draw(self)
         self.__window.refresh()
 
     def pop_menu(self):
@@ -67,7 +67,7 @@ class GameLauncher:
 
         if len(self.__menustack) > 0:
             self.__window.clear()
-            self.__top().draw()
+            self.__top().draw(self)
             self.__window.refresh()
 
     def game_menu(self, n):
@@ -77,7 +77,7 @@ class GameLauncher:
     def run(self):
         while not self.__exiting and len(self.__menustack) > 0:
             c = self.__scr.getch()
-            self.__top().key(c)
+            self.__top().key(c, self)
 
     def quit(self):
         #self.__exiting = True
@@ -132,6 +132,9 @@ class GameLauncher:
             newargs.update(kwargs)
             return render_template(s, **newargs)
 
+    def register(self):
+        pass
+
     def play(self, n):
         g = self.__games[n]
 
@@ -167,55 +170,65 @@ class GameLauncher:
         self.init_curses()
         
 class KeyInput:
-    def __init__(self, echo):
+    def __init__(self, echo, key, nextmenu):
         self.__text = ""
         self.__echo = echo
+        self.__next = nextmenu
+        self.__values = {}
+        self.__key = key
 
-    def key(self, c):
+    def key(self, c, app):
         if c == ord('\n'):
-            self.finished(self.__text)
+            self.__do_next(app)
         else:
             ch = chr(c)
             self.__text += ch
 
-            if self.echo:
-                scr = self.app.screen()
+            if self.__echo:
+                scr = app.screen()
                 scr.addstr(ch)
                 scr.refresh()
 
+    def __do_next(self, app):
+        app.pop_menu()
+        values = self.__values.copy()
+        values[self.__key] = self.__text
+        self.__next.start(app, values)
+
+    def start(self, app, values):
+        self.__values = values
+        app.push_menu(self)
+
+
 class UserNameMenu(KeyInput):
-    def __init__(self, app):
-        super().__init__(True)
-        self.app = app
-        self.__user = ""
-        self.text = ""
-        self.echo = True
+    def __init__(self, n):
+        super().__init__(True, "user", n)
 
-    def finished(self, text):
-        self.app.pop_menu()
-        self.app.push_menu(PasswordMenu(self.app, text))
-
-    def draw(self):
-        self.app.screen().addstr(1, 1, "Enter your username: ")
+    def draw(self, app):
+        app.screen().addstr(1, 1, "Enter your username: ")
 
 class PasswordMenu(KeyInput):
-    def __init__(self, app, user):
-        super().__init__(False)
-        self.app = app
-        self.__user = user
-        self.text = ""
-        self.echo = False
+    def __init__(self, n):
+        super().__init__(False, "password", n)
 
-    def finished(self, text):
-        scr = self.app.screen()
-        y, x = scr.getyx()
-        scr.hline(1,1, ' ', x)
-        self.app.pop_menu()
-        self.app.login(self.__user, text)
-
-    def draw(self):
-        scr = self.app.screen()
+    def draw(self, app):
+        scr = app.screen()
         scr.addstr(1, 1, "Enter your password: ")
+
+class DoLoginMenu:
+    def __init__(self):
+        pass
+
+    def start(self, app, values):
+        app.login(values['user'], values['password'])
+
+class EmailMenu(KeyInput):
+    def __init__(self, app, n):
+        super().__init__(True)
+
+    def entered(self, t):
+        pass
+
 
 class ChoiceRunner:
     def __init__(self, app, **kwargs):
@@ -227,7 +240,8 @@ class ChoiceRunner:
         self.__commands[parts[0]](self, parts[1:])
 
     def login(self, args):
-        self.__app.push_menu(UserNameMenu(self.__app))
+        menu = UserNameMenu(PasswordMenu(DoLoginMenu()))
+        self.__app.push_menu(menu)
 
     def game(self, args):
         self.__app.game_menu(int(args[0]))
@@ -238,17 +252,20 @@ class ChoiceRunner:
     def play(self, args):
         self.__app.play(int(args[0]))
 
+    def register(self, args):
+        self.__app.register()
+
     __commands = {
         "login" : login,
-        "play" : play,
         "game" : game,
-        "quit" : quit
+        "play" : play,
+        "quit" : quit,
+        "register" : register
     }
 
 class Menu:
     def __init__(self, y, app, **kwargs):
         self.__runner = ChoiceRunner(app, **kwargs)
-        self.__app = app
         self.__lines = []
         self.__keys = {}
         self.__args = kwargs
@@ -258,26 +275,26 @@ class Menu:
             if f is not "blank" and isinstance(f, str):
                 menus = app.generate_menus(f)
                 for i in menus:
-                    self.__add_item(i)
+                    self.__add_item(i, app)
             else:
-                self.__add_item(f)
+                self.__add_item(f, app)
 
-    def __add_item(self, f):
+    def __add_item(self, f, app):
         if f == "blank":
             self.__lines.append("")
         else:
-            text = self.__app.render_template(f['title'], **self.__args)
+            text = app.render_template(f['title'], **self.__args)
             self.__keys[ord(f['key'])] = f
             self.__lines.append("{}) {}".format(f['key'], text))
 
-    def draw(self):
+    def draw(self, app):
         i = 1
-        scr = self.__app.screen()
+        scr = app.screen()
         for f in self.__lines:
             scr.addstr(i, 1, f)
             i += 1
 
-    def key(self, c):
+    def key(self, c, app):
         if c in self.__keys:
             a = self.__keys[c]
             self.__runner.run(a['action'])
