@@ -132,8 +132,12 @@ class GameLauncher:
             newargs.update(kwargs)
             return render_template(s, **newargs)
 
-    def register(self):
-        pass
+    def register(self, values):
+        u = db.create_user(values['user'],
+            values['password'],
+            values['email']
+        )
+        db.add_user(self.__database, u)
 
     def play(self, n):
         g = self.__games[n]
@@ -170,12 +174,13 @@ class GameLauncher:
         self.init_curses()
         
 class KeyInput:
-    def __init__(self, echo, key, nextmenu):
+    def __init__(self, echo, key, message, nextmenu):
         self.__text = ""
         self.__echo = echo
         self.__next = nextmenu
         self.__values = {}
         self.__key = key
+        self.__message = message
 
     def key(self, c, app):
         if c == ord('\n'):
@@ -199,36 +204,29 @@ class KeyInput:
         self.__values = values
         app.push_menu(self)
 
+    def draw(self, app):
+        app.screen().addstr(1,1, self.__message + ": ")
+
 
 class UserNameMenu(KeyInput):
     def __init__(self, n):
-        super().__init__(True, "user", n)
-
-    def draw(self, app):
-        app.screen().addstr(1, 1, "Enter your username: ")
+        super().__init__(True, "user", "Enter your username", n)
 
 class PasswordMenu(KeyInput):
     def __init__(self, n):
-        super().__init__(False, "password", n)
-
-    def draw(self, app):
-        scr = app.screen()
-        scr.addstr(1, 1, "Enter your password: ")
+        super().__init__(False, "password", "Enter your password", n)
 
 class DoLoginMenu:
-    def __init__(self):
-        pass
-
     def start(self, app, values):
         app.login(values['user'], values['password'])
 
+class DoRegisterMenu:
+    def start(self, app, values):
+        app.register(values)
+
 class EmailMenu(KeyInput):
-    def __init__(self, app, n):
-        super().__init__(True)
-
-    def entered(self, t):
-        pass
-
+    def __init__(self, n):
+        super().__init__(True, "email", "Enter your email address", n)
 
 class ChoiceRunner:
     def __init__(self, app, **kwargs):
@@ -253,7 +251,8 @@ class ChoiceRunner:
         self.__app.play(int(args[0]))
 
     def register(self, args):
-        self.__app.register()
+        menu = UserNameMenu(PasswordMenu(EmailMenu(DoRegisterMenu())))
+        self.__app.push_menu(menu)
 
     __commands = {
         "login" : login,

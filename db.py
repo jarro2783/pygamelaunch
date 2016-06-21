@@ -25,6 +25,7 @@ class User(Base):
     username = Column(String)
     password = Column(String)
     salt = Column(String)
+    email = Column(String)
 
     def __repr__(self):
         return "<User(id='{}', name='{}', pass='{}', salt='{}')>".format(
@@ -43,11 +44,11 @@ class CreateUser:
         return User(username=self.__user, password=self.__hash.digest(),
             salt=self.__salt)
 
-def create_user(name, password):
+def create_user(name, password, email):
     salt = os.urandom(16)
     s = hashlib.sha256(salt)
     s.update(password.encode('utf-8'))
-    return User(username=name, password=s.digest(), salt=salt)
+    return User(username=name, password=s.digest(), salt=salt, email=email)
 
 def add_user(db, user):
     s = db.begin()
