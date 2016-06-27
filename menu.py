@@ -139,10 +139,30 @@ class GameLauncher:
         )
         db.add_user(self.__database, u)
 
+    def __docker(self, message, args):
+        curses.endwin()
+        pid = os.fork()
+
+        docker = [
+            "docker",
+            "run",
+            "--rm",
+            "-it"
+        ]
+
+        if pid == 0:
+            print(message)
+            os.execv("/usr/bin/docker", docker + args)
+        else:
+            os.waitpid(pid, 0)
+
+        self.__scr = curses.initscr()
+        self.init_curses()
+
     def play(self, n):
         g = self.__games[n]
 
-        args = ["docker", "run", "--rm", "-it"]
+        args = []
 
         if 'volumes' in g:
             for v in g['volumes']:
@@ -161,11 +181,24 @@ class GameLauncher:
             else:
                 args.append(self.render_template(a))
 
+        self.__docker("Loading...", args)
+
+    def edit_options(self, path):
+        args = ["docker",
+            "run",
+            "--rm",
+            "-it",
+            "-v",
+            path + ":/file",
+            "jarro2783/vim",
+            "/file"
+        ]
+
         curses.endwin()
         pid = os.fork()
-
         if pid == 0:
-            print("Loading...")
+            print("Loading editor...")
+            print("Mounting: " + path + " as /file")
             os.execv("/usr/bin/docker", args)
         else:
             os.waitpid(pid, 0)
@@ -254,12 +287,19 @@ class ChoiceRunner:
         menu = UserNameMenu(PasswordMenu(EmailMenu(DoRegisterMenu())))
         self.__app.push_menu(menu)
 
+    def edit(self, args):
+        self.__app.edit_options(self.__render(args[0]))
+
+    def __render(self, s):
+        return self.__app.render_template(s, **self.__args)
+
     __commands = {
         "login" : login,
         "game" : game,
         "play" : play,
         "quit" : quit,
-        "register" : register
+        "register" : register,
+        "edit" : edit
     }
 
 class Menu:
