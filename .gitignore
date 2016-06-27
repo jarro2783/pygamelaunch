@@ -1,4 +1,5 @@
 *.swp
 *.pyc
+*.pyo
 __pycache__/
 users.db

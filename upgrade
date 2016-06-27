@@ -1,0 +1,5 @@
+#!/bin/bash
+
+. ./alembic_defs
+
+alembic upgrade head
