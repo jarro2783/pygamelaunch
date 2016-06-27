@@ -5,6 +5,7 @@ import db
 import hashlib
 from jinja2 import Template
 import os
+from sqlalchemy.exc import IntegrityError
 import sys
 import time
 import yaml
@@ -100,10 +101,21 @@ class GameLauncher:
 
             if sha.digest() == u.password:
                 self.pop_menu()
-                self.__user = user
-                self.__template_args['user'] = user
-                self.__scr.addstr(3, 1, "Logged in as: {}".format(user))
-                self.push_menu("loggedin")
+
+                self.__do_login(user)
+
+    def __do_login(self, user):
+        self.__user = user
+        self.__template_args['user'] = user
+        self.status("Logged in as: {}".format(user))
+        self.push_menu("loggedin")
+
+
+    def status(self, message):
+        scr = self.__scr
+        _, x = scr.getyx()
+        scr.hline(3, 0, ' ', x)
+        scr.addstr(3, 1, message)
 
     def generate_menus(self, name):
         if name == "games":
@@ -133,11 +145,19 @@ class GameLauncher:
             return render_template(s, **newargs)
 
     def register(self, values):
-        u = db.create_user(values['user'],
+        user = values['user']
+        u = db.create_user(user,
             values['password'],
             values['email']
         )
-        db.add_user(self.__database, u)
+
+        try:
+            db.add_user(self.__database, u)
+            self.pop_menu()
+            self.__do_login(user)
+        except IntegrityError:
+            self.status("Username already in use")
+            
 
     def __docker(self, message, args):
         curses.endwin()
