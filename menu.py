@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import curses
+import curses.ascii
 import db
 import hashlib
 from jinja2 import Template
@@ -236,14 +237,22 @@ class KeyInput:
         self.__message = message
 
     def key(self, c, app):
+        scr = app.screen()
+        ch = chr(c)
         if c == ord('\n'):
             self.__do_next(app)
-        else:
-            ch = chr(c)
+        elif c == curses.KEY_BACKSPACE or c == 127:
+            if len(self.__text) > 0:
+                self.__text = self.__text[0: -1]
+                y, x = scr.getyx()
+                scr.move(y, x-1)
+                scr.delch()
+                scr.refresh()
+
+        elif curses.ascii.isgraph(ch):
             self.__text += ch
 
             if self.__echo:
-                scr = app.screen()
                 scr.addstr(ch)
                 scr.refresh()
 
