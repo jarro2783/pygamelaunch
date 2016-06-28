@@ -210,16 +210,16 @@ class GameLauncher:
             "--rm",
             "-it",
             "-v",
-            path + ":/file",
+            path + ":/.nethackrc",
             "jarro2783/vim",
-            "/file"
+            "/.nethackrc"
         ]
 
         curses.endwin()
         pid = os.fork()
         if pid == 0:
             print("Loading editor...")
-            print("Mounting: " + path + " as /file")
+            print("Mounting: " + path + " as /.nethackrc")
             os.execv("/usr/bin/docker", args)
         else:
             os.waitpid(pid, 0)

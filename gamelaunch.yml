@@ -60,6 +60,6 @@ games:
 
       options: &nh360options "/home/nh360/{{user}}/config.txt"
       volumes: 
-        - [*nh360options, "/home/player/.nethackrc"]
+        - [*nh360options, "/root/.nethackrc"]
         - ["/home/jarryd/nhinstall/game", "/home/nethack/game"]
       image: jarro2783/nethack
