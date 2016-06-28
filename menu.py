@@ -64,10 +64,13 @@ class GameLauncher:
         menu.draw(self)
         self.__window.refresh()
 
-    def pop_menu(self):
+    def __pop_menu(self):
         self.__menustack.pop()
 
-        if len(self.__menustack) > 0:
+    def pop_menu(self, redraw=True):
+        self.__pop_menu()
+
+        if len(self.__menustack) > 0 and redraw:
             self.__window.clear()
             self.__top().draw(self)
             self.__window.refresh()
@@ -101,7 +104,7 @@ class GameLauncher:
             sha.update(pw.encode('utf-8'))
 
             if sha.digest() == u.password:
-                self.pop_menu()
+                self.__pop_menu()
 
                 self.__do_login(user)
 
@@ -110,7 +113,6 @@ class GameLauncher:
         self.__template_args['user'] = user
         self.status("Logged in as: {}".format(user))
         self.push_menu("loggedin")
-
 
     def status(self, message):
         scr = self.__scr
@@ -154,11 +156,10 @@ class GameLauncher:
 
         try:
             db.add_user(self.__database, u)
-            self.pop_menu()
+            self.__pop_menu()
             self.__do_login(user)
         except IntegrityError:
             self.status("Username already in use")
-            
 
     def __docker(self, message, args):
         curses.endwin()
@@ -259,7 +260,7 @@ class KeyInput:
                 scr.refresh()
 
     def __do_next(self, app):
-        app.pop_menu()
+        app.pop_menu(False)
         values = self.__values.copy()
         values[self.__key] = self.__text
         self.__next.start(app, values)
