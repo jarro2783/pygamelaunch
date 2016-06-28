@@ -244,10 +244,12 @@ class KeyInput:
         elif c == curses.KEY_BACKSPACE or c == 127:
             if len(self.__text) > 0:
                 self.__text = self.__text[0: -1]
-                y, x = scr.getyx()
-                scr.move(y, x-1)
-                scr.delch()
-                scr.refresh()
+
+                if self.__echo:
+                    y, x = scr.getyx()
+                    scr.move(y, x-1)
+                    scr.delch()
+                    scr.refresh()
 
         elif curses.ascii.isgraph(ch):
             self.__text += ch
