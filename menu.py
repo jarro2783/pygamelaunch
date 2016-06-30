@@ -17,6 +17,9 @@ def render_template(t, **kwargs):
     tem = Template(t)
     return tem.render(kwargs)
 
+class InvalidUser:
+    pass
+
 class GameLauncher:
 
     LoginLine = 3
@@ -258,16 +261,38 @@ class GameLauncher:
         self.__scr = curses.initscr()
         self.init_curses()
 
-    def change_password(self, password):
-        session = self.__database.begin()
+    def __get_user(self, username):
+        session = self.__begin_session()
         users = session.query(db.User).\
             filter(db.User.username == self.__user).all()
 
         if len(users) != 0:
-            user = users[0]
-            db.update_password(user, password)
-            self.status("Password changed")
-            session.commit()
+            return users[0]
+        else:
+            raise InvalidUser()
+
+    def __begin_session(self):
+        self.__session = self.__database.begin()
+        return self.__session
+
+    def __get_session(self):
+        return self.__session
+
+    def __commit_session(self):
+        self.__session.commit()
+        self.__session = None
+
+    def change_password(self, password):
+        user = self.__get_user(self.__user)
+        db.update_password(user, password)
+        self.status("Password changed")
+        self.__commit_session()
+
+    def change_email(self, email):
+        user = self.__get_user(self.__user)
+        user.email = email
+        self.status("Email changed")
+        self.__commit_session()
 
 class KeyInput:
     def __init__(self, echo, key, message, nextmenu):
@@ -339,6 +364,11 @@ class ChangePasswordMenu:
         app.change_password(values['password'])
         app.redraw()
 
+class ChangeEmailMenu:
+    def start(self, app, values):
+        app.change_email(values['email'])
+        app.redraw()
+
 class ChoiceRunner:
     def __init__(self, app, **kwargs):
         self.__app = app
@@ -377,6 +407,12 @@ class ChoiceRunner:
         else:
             self.__app.push_menu(PasswordMenu(ChangePasswordMenu()))
 
+    def changeemail(self, args):
+        if self.__app.user() == "":
+            self.status("You are not logged in")
+        else:
+            self.__app.push_menu(EmailMenu(ChangeEmailMenu()))
+
     __commands = {
         "login" : login,
         "game" : game,
@@ -384,7 +420,8 @@ class ChoiceRunner:
         "quit" : quit,
         "register" : register,
         "edit" : edit,
-        "changepass" : changepass
+        "changepass" : changepass,
+        "changeemail" : changeemail
     }
 
 class Menu:
