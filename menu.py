@@ -18,6 +18,10 @@ def render_template(t, **kwargs):
     return tem.render(kwargs)
 
 class GameLauncher:
+
+    LoginLine = 3
+    WinStart = 4
+
     def __init__(self, scr, config):
         menus = config['menus']
         self.__scr = scr
@@ -41,10 +45,11 @@ class GameLauncher:
     def init_curses(self):
         scr = self.__scr
         y,x = scr.getmaxyx()
-        ry = 4
+        ry = self.WinStart
 
-        self.__window = curses.newwin(y - ry, x, ry, 0)
-        scr.addstr(1, 1, "Pygamelaunch v{}".format(version))
+        self.__window = curses.newwin(y - ry - 1, x, ry, 0)
+        scr.addstr(1, 1, "Pygamelaunch")
+        self.logged_in("Not logged in")
         scr.refresh()
 
 
@@ -114,14 +119,21 @@ class GameLauncher:
     def __do_login(self, user):
         self.__user = user
         self.__template_args['user'] = user
-        self.status("Logged in as: {}".format(user))
+        self.logged_in("Logged in as: {}".format(user))
         self.push_menu("loggedin")
 
-    def status(self, message):
+    def message_line(self, message, row):
         scr = self.__scr
-        _, x = scr.getyx()
-        scr.hline(3, 0, ' ', x)
-        scr.addstr(3, 1, message)
+        _, x = scr.getmaxyx()
+        scr.hline(row, 0, ' ', x)
+        scr.addstr(row, 1, message)
+
+    def status(self, message):
+        y, _ = self.__scr.getmaxyx()
+        self.message_line(message, y-1)
+
+    def logged_in(self, message):
+        self.message_line(message, self.LoginLine)
 
     def generate_menus(self, name):
         if name == "games":
