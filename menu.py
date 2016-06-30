@@ -42,6 +42,11 @@ class GameLauncher:
     def user(self):
         return self.__user
 
+    def redraw(self):
+        self.__window.clear()
+        self.__menustack[-1].draw(self)
+        self.__window.refresh()
+
     def init_curses(self):
         scr = self.__scr
         y,x = scr.getmaxyx()
@@ -49,7 +54,11 @@ class GameLauncher:
 
         self.__window = curses.newwin(y - ry - 1, x, ry, 0)
         scr.addstr(1, 1, "Pygamelaunch")
-        self.logged_in("Not logged in")
+
+        if self.__user != "":
+            self.logged_in("Logged in as {}".format(self.__user))
+        else:
+            self.logged_in("Not logged in")
         scr.refresh()
 
 
@@ -113,8 +122,11 @@ class GameLauncher:
 
             if sha.digest() == u.password:
                 self.__pop_menu()
-
                 self.__do_login(user)
+                return
+
+        # we get here if not logged in
+        self.redraw()
 
     def __do_login(self, user):
         self.__user = user
@@ -254,8 +266,9 @@ class GameLauncher:
         if len(users) != 0:
             user = users[0]
             db.update_password(user, password)
+            self.status("Password changed")
             session.commit()
-        
+
 class KeyInput:
     def __init__(self, echo, key, message, nextmenu):
         self.__text = ""
@@ -324,6 +337,7 @@ class EmailMenu(KeyInput):
 class ChangePasswordMenu:
     def start(self, app, values):
         app.change_password(values['password'])
+        app.redraw()
 
 class ChoiceRunner:
     def __init__(self, app, **kwargs):
