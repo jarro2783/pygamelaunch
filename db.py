@@ -9,13 +9,13 @@ Base = declarative_base()
 class Database:
     def __init__(self):
         self.__engine = sqlalchemy.create_engine('sqlite:///users.db')
+        self.__Session = sqlalchemy.orm.sessionmaker()
+        self.__Session.configure(bind=self.__engine)
 
     def create(self):
         Base.metadata.create_all(self.__engine)
 
     def begin(self):
-        self.__Session = sqlalchemy.orm.sessionmaker()
-        self.__Session.configure(bind=self.__engine)
         return self.__Session()
 
 class User(Base):
@@ -44,11 +44,20 @@ class CreateUser:
         return User(username=self.__user, password=self.__hash.digest(),
             salt=self.__salt)
 
-def create_user(name, password, email):
+def create_password(password):
     salt = os.urandom(16)
     s = hashlib.sha256(salt)
     s.update(password.encode('utf-8'))
-    return User(username=name, password=s.digest(), salt=salt, email=email)
+    return (salt, s.digest())
+
+def update_password(user, password):
+    salt, digest = create_password(password)
+    user.password = digest
+    user.salt = salt
+
+def create_user(name, password, email):
+    salt, digest = create_password(password)
+    return User(username=name, password=digest, salt=salt, email=email)
 
 def add_user(db, user):
     s = db.begin()

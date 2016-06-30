@@ -35,6 +35,9 @@ class GameLauncher:
 
         self.push_menu("main")
 
+    def user(self):
+        return self.__user
+
     def init_curses(self):
         scr = self.__scr
         y,x = scr.getmaxyx()
@@ -227,6 +230,16 @@ class GameLauncher:
 
         self.__scr = curses.initscr()
         self.init_curses()
+
+    def change_password(self, password):
+        session = self.__database.begin()
+        users = session.query(db.User).\
+            filter(db.User.username == self.__user).all()
+
+        if len(users) != 0:
+            user = users[0]
+            db.update_password(user, password)
+            session.commit()
         
 class KeyInput:
     def __init__(self, echo, key, message, nextmenu):
@@ -293,6 +306,10 @@ class EmailMenu(KeyInput):
     def __init__(self, n):
         super().__init__(True, "email", "Enter your email address", n)
 
+class ChangePasswordMenu:
+    def start(self, app, values):
+        app.change_password(values['password'])
+
 class ChoiceRunner:
     def __init__(self, app, **kwargs):
         self.__app = app
@@ -325,13 +342,20 @@ class ChoiceRunner:
     def __render(self, s):
         return self.__app.render_template(s, **self.__args)
 
+    def changepass(self, args):
+        if self.__app.user() == "":
+            self.status("You are not logged in")
+        else:
+            self.__app.push_menu(PasswordMenu(ChangePasswordMenu()))
+
     __commands = {
         "login" : login,
         "game" : game,
         "play" : play,
         "quit" : quit,
         "register" : register,
-        "edit" : edit
+        "edit" : edit,
+        "changepass" : changepass
     }
 
 class Menu:
