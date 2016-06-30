@@ -171,10 +171,13 @@ class GameLauncher:
 
         try:
             db.add_user(self.__database, u)
+            self.status("Created new user")
             self.__pop_menu()
             self.__do_login(user)
         except IntegrityError:
             self.status("Username already in use")
+            self.__pop_menu()
+            self.push_menu('main')
 
     def __docker(self, message, args):
         curses.endwin()
