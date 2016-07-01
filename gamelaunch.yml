@@ -63,3 +63,4 @@ games:
         - [*nh360options, "/root/.nethackrc"]
         - ["/home/jarryd/nhinstall/game", "/home/nethack/game"]
       image: jarro2783/nethack
+      recordings: '/home/jarryd/nhinstall/recordings'

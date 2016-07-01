@@ -11,6 +11,8 @@ import sys
 import time
 import yaml
 
+import pprint
+
 version = 0.1
 
 def render_template(t, **kwargs):
@@ -19,6 +21,20 @@ def render_template(t, **kwargs):
 
 class InvalidUser:
     pass
+
+class TTYRecord:
+    def __init__(self, volume):
+        self.__volume = volume
+
+    def args(self, a):
+        return ["-e", ' '.join(a)]
+
+    def entrypoint(self):
+        return "ttyrec"
+
+    def record_args(self):
+        return ['-v', self.__volume + ":/recordings", 
+                '-w', '/recordings']
 
 class GameLauncher:
 
@@ -194,7 +210,7 @@ class GameLauncher:
             self.__pop_menu()
             self.push_menu('main')
 
-    def __docker(self, message, args):
+    def __docker(self, message, docker, image, args, record=None):
         curses.endwin()
         pid = os.fork()
 
@@ -203,11 +219,23 @@ class GameLauncher:
             "run",
             "--rm",
             "-it"
-        ]
+        ] + docker
+
+        if record is not None:
+            docker.extend(['--entrypoint', record.entrypoint()])
+            docker.extend(record.record_args())
+
+        if record is not None:
+            docker.append(image)
+            docker.extend(record.args(['/home/nethack/nethack'] + args))
+        else:
+            docker.append(image)
+            docker.extend(args)
 
         if pid == 0:
             print(message)
-            os.execv("/usr/bin/docker", docker + args)
+            print(pprint.pprint(docker, indent=2))
+            os.execv("/usr/bin/docker", docker)
         else:
             os.waitpid(pid, 0)
 
@@ -217,18 +245,18 @@ class GameLauncher:
     def play(self, n):
         g = self.__games[n]
 
+        docker = []
         args = []
 
         if 'volumes' in g:
             for v in g['volumes']:
-                args.append("-v")
+                docker.append("-v")
                 volume = "{}:{}".format(
                   self.render_template(v[0]),
                   self.render_template(v[1])
                 )
-                args.append(volume)
+                docker.append(volume)
 
-        args.append(g['image'])
         if 'arguments' in g:
             a = g['arguments']
             if isinstance(a, list):
@@ -236,7 +264,8 @@ class GameLauncher:
             else:
                 args.append(self.render_template(a))
 
-        self.__docker("Loading...", args)
+        self.__docker("Loading...", docker, g['image'], args,
+            TTYRecord(g['recordings']))
 
     def edit_options(self, path):
         args = ["docker",
