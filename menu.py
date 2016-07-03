@@ -26,15 +26,19 @@ class TTYRecord:
     def __init__(self, volume):
         self.__volume = volume
 
+    def binary(self):
+        return "termrec"
+
     def args(self, a):
-        return ["-e", ' '.join(a)]
+        now = time.localtime()
+        date = "{}-{}-{}-{}-{}-{}.ttyrec.bz2".format(now.tm_year,
+          now.tm_mon,
+          now.tm_mday,
+          now.tm_hour,
+          now.tm_min,
+          now.tm_sec)
 
-    def entrypoint(self):
-        return "ttyrec"
-
-    def record_args(self):
-        return ['-v', self.__volume + ":/recordings", 
-                '-w', '/recordings']
+        return ["-e", ' '.join(a), self.__volume + "/" + date]
 
 class GameLauncher:
 
@@ -221,23 +225,23 @@ class GameLauncher:
             "-it"
         ] + docker
 
-        if record is not None:
-            docker.extend(['--entrypoint', record.entrypoint()])
-            docker.extend(record.record_args())
+        docker.append(image)
+        docker.extend(args)
 
         if record is not None:
-            docker.append(image)
-            docker.extend(record.args(['/home/nethack/nethack'] + args))
+            binary = record.binary()
+            run_args = record.args(docker)
         else:
-            docker.append(image)
-            docker.extend(args)
+            binary = "/usr/bin/docker"
+            run_args = docker
 
         if pid == 0:
             print(message)
-            print(pprint.pprint(docker, indent=2))
-            os.execv("/usr/bin/docker", docker)
+            print(pprint.pprint(run_args, indent=2))
+            os.execvp(binary, [binary] + run_args)
+            os.exit(1)
         else:
-            os.waitpid(pid, 0)
+            p, status = os.waitpid(pid, 0)
 
         self.__scr = curses.initscr()
         self.init_curses()
