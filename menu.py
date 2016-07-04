@@ -237,7 +237,6 @@ class GameLauncher:
 
         if pid == 0:
             print(message)
-            print(pprint.pprint(run_args, indent=2))
             os.execvp(binary, [binary] + run_args)
             os.exit(1)
         else:
