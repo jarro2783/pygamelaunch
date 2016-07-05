@@ -278,14 +278,26 @@ class GameLauncher:
         self.__stop_playing()
 
     def __start_playing(self, tty):
-        pass
+        session = self.__database.begin()
+        user = session.\
+            query(db.User).filter(db.User.username == self.__user).one()
+        playing = db.Playing(id = user.id, record = tty, since = time.time())
+        session.add(playing)
+        session.commit()
 
     def __stop_playing(self):
-        pass
+        session = self.__database.begin()
+        user = session.query(db.User).\
+            filter(db.User.username == self.__user).one()
+
+        playing = session.query(db.Playing).filter(db.Playing.id == user.id).one()
+        session.delete(playing)
+        session.commit()
 
     def playing(self):
         s = self.__database.begin()
         playing = s.query(db.Playing).join(db.User).all()
+        s.commit()
         return playing
 
     def edit_options(self, path):
