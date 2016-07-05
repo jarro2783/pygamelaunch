@@ -26,19 +26,23 @@ class TTYRecord:
     def __init__(self, volume):
         self.__volume = volume
 
-    def binary(self):
-        return "termrec"
-
-    def args(self, a):
-        now = time.localtime()
-        date = "{}-{}-{}-{}-{}-{}.ttyrec.bz2".format(now.tm_year,
+        self.__record = "{}-{}-{}-{}-{}-{}.ttyrec.bz2".format(now.tm_year,
           now.tm_mon,
           now.tm_mday,
           now.tm_hour,
           now.tm_min,
           now.tm_sec)
 
-        return ["-e", ' '.join(a), self.__volume + "/" + date]
+    def binary(self):
+        return "termrec"
+
+    def args(self, a):
+        now = time.localtime()
+
+        return ["-e", ' '.join(a), self.__volume + "/" + self.__record]
+
+    def file(self):
+        return self.__record
 
 class GameLauncher:
 
@@ -267,8 +271,22 @@ class GameLauncher:
             else:
                 args.append(self.render_template(a))
 
+        tty = TTYRecord(g['recordings'])
+        self.__start_playing(tty.date())
         self.__docker("Loading...", docker, g['image'], args,
-            TTYRecord(g['recordings']))
+            tty)
+        self.__stop_playing()
+
+    def __start_playing(self, tty):
+        pass
+
+    def __stop_playing(self):
+        pass
+
+    def playing(self):
+        s = self.__database.begin()
+        playing = s.query(db.Playing).join(db.User).all()
+        return playing
 
     def edit_options(self, path):
         args = ["docker",
@@ -325,6 +343,14 @@ class GameLauncher:
         user.email = email
         self.status("Email changed")
         self.__commit_session()
+
+class WatchMenu:
+    def draw(self, app):
+        playing = app.playing()
+
+    def key(self, c, app):
+        if c == ord('q'):
+            app.pop_menu()
 
 class KeyInput:
     def __init__(self, echo, key, message, nextmenu):
@@ -445,6 +471,9 @@ class ChoiceRunner:
         else:
             self.__app.push_menu(EmailMenu(ChangeEmailMenu()))
 
+    def watch(self, args):
+        self.__app.push_menu(WatchMenu())
+
     __commands = {
         "login" : login,
         "game" : game,
@@ -453,7 +482,8 @@ class ChoiceRunner:
         "register" : register,
         "edit" : edit,
         "changepass" : changepass,
-        "changeemail" : changeemail
+        "changeemail" : changeemail,
+        "watch" : watch
     }
 
 class Menu:

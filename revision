@@ -2,4 +2,4 @@
 
 . ./alembic_defs
 
-alembic revision --autodetect "$@"
+alembic revision --autogenerate "$@"

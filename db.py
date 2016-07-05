@@ -1,6 +1,6 @@
 import sqlalchemy
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, ForeignKey
 import hashlib
 import os
 
@@ -30,6 +30,12 @@ class User(Base):
     def __repr__(self):
         return "<User(id='{}', name='{}', pass='{}', salt='{}')>".format(
             self.id, self.username, self.password, self.salt)
+
+class Playing(Base):
+    __tablename__ = 'playing'
+
+    id = Column(Integer, ForeignKey('users.id'), primary_key=True)
+    since = Column(Integer)
 
 class CreateUser:
     def __init__(self, user):
