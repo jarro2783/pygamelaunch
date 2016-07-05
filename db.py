@@ -36,6 +36,7 @@ class Playing(Base):
 
     id = Column(Integer, ForeignKey('users.id'), primary_key=True)
     since = Column(Integer)
+    record = Column(String)
 
 class CreateUser:
     def __init__(self, user):
