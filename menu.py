@@ -26,6 +26,8 @@ class TTYRecord:
     def __init__(self, volume):
         self.__volume = volume
 
+        now = time.localtime()
+
         self.__record = "{}-{}-{}-{}-{}-{}.ttyrec.bz2".format(now.tm_year,
           now.tm_mon,
           now.tm_mday,
@@ -37,8 +39,6 @@ class TTYRecord:
         return "termrec"
 
     def args(self, a):
-        now = time.localtime()
-
         return ["-e", ' '.join(a), self.__volume + "/" + self.__record]
 
     def file(self):
@@ -272,7 +272,7 @@ class GameLauncher:
                 args.append(self.render_template(a))
 
         tty = TTYRecord(g['recordings'])
-        self.__start_playing(tty.date())
+        self.__start_playing(tty.file())
         self.__docker("Loading...", docker, g['image'], args,
             tty)
         self.__stop_playing()
