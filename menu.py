@@ -28,7 +28,8 @@ class TTYRecord:
 
         now = time.localtime()
 
-        self.__record = "{}-{}-{}-{}-{}-{}.ttyrec.bz2".format(now.tm_year,
+        self.__record = "{}-{:02}-{:02}-{:02}-{:02}-{:02}.ttyrec.bz2".\
+            format(now.tm_year,
           now.tm_mon,
           now.tm_mday,
           now.tm_hour,
@@ -296,7 +297,7 @@ class GameLauncher:
 
     def playing(self):
         s = self.__database.begin()
-        playing = s.query(db.Playing).join(db.User).all()
+        playing = s.query(db.Playing, db.User).join(db.User).all()
         s.commit()
         return playing
 
@@ -357,12 +358,32 @@ class GameLauncher:
         self.__commit_session()
 
 class WatchMenu:
-    def draw(self, app):
+    offset = 2
+    def draw_row(self, app, player, row):
+        playing = player[0]
+        user = player[1];
+        screen = app.screen()
+        screen.addstr(1, self.offset + row,
+          "{})  {}".format(chr(row + ord('a')), user.username))
+
+    def update_playing(self, app):
         playing = app.playing()
+        self.__playing = playing
+
+        row = 0
+        for player in playing:
+            self.draw_row(app, player, row)
+
+    def draw(self, app):
+        self.update_playing(app)
 
     def key(self, c, app):
         if c == ord('q'):
             app.pop_menu()
+        elif c >= ord('a') or c <= ord('z'):
+            which = c - ord('a')
+            if which < len(self.__playing):
+                app.watch(self.__playing.id)
 
 class KeyInput:
     def __init__(self, echo, key, message, nextmenu):
