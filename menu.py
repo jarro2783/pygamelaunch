@@ -26,8 +26,8 @@ class InvalidUser:
     pass
 
 class TTYRecord:
-    def __init__(self, volume):
-        self.__volume = volume
+    def __init__(self, directory):
+        self.__directory = directory
 
         now = time.localtime()
 
@@ -43,10 +43,10 @@ class TTYRecord:
         return "ttyrec"
 
     def args(self, a):
-        return ["-e", ' '.join(a), self.__volume + "/" + self.__record]
+        return ["-e", ' '.join(a), self.__directory + "/" + self.__record]
 
     def file(self):
-        return self.__volume + "/" + self.__record
+        return self.__directory + "/" + self.__record
 
 class GameLauncher:
 
@@ -283,7 +283,7 @@ class GameLauncher:
             else:
                 args.append(self.render_template(a))
 
-        tty = TTYRecord(g['recordings'])
+        tty = TTYRecord(self.render_template(g['recordings']))
         self.__start_playing(tty.file())
         self.__docker("Loading...", docker, g['image'], args,
             tty)
