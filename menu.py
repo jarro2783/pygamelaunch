@@ -6,9 +6,12 @@ import db
 import hashlib
 from jinja2 import Template
 import os
+import signal
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm.exc import NoResultFound
 import sys
 import time
+import tty
 import yaml
 
 import pprint
@@ -28,7 +31,7 @@ class TTYRecord:
 
         now = time.localtime()
 
-        self.__record = "{}-{:02}-{:02}-{:02}-{:02}-{:02}.ttyrec.bz2".\
+        self.__record = "{}-{:02}-{:02}-{:02}-{:02}-{:02}.ttyrec".\
             format(now.tm_year,
           now.tm_mon,
           now.tm_mday,
@@ -37,13 +40,13 @@ class TTYRecord:
           now.tm_sec)
 
     def binary(self):
-        return "termrec"
+        return "ttyrec"
 
     def args(self, a):
         return ["-e", ' '.join(a), self.__volume + "/" + self.__record]
 
     def file(self):
-        return self.__record
+        return self.__volume + "/" + self.__record
 
 class GameLauncher:
 
@@ -219,9 +222,25 @@ class GameLauncher:
             self.__pop_menu()
             self.push_menu('main')
 
-    def __docker(self, message, docker, image, args, record=None):
+    def __execute(self, binary, args, message = None, custom = None):
         curses.endwin()
-        pid = os.fork()
+
+        if custom is not None:
+            custom(binary, args)
+        else:
+            pid = os.fork()
+            if pid == 0:
+                if message is not None:
+                    print(message)
+                os.execvp(binary, args)
+                os.exit(1)
+            else:
+                p, status = os.waitpid(pid, 0)
+
+        self.__scr = curses.initscr()
+        self.init_curses()
+
+    def __docker(self, message, docker, image, args, record=None):
 
         docker = [
             "docker",
@@ -240,15 +259,7 @@ class GameLauncher:
             binary = "/usr/bin/docker"
             run_args = docker
 
-        if pid == 0:
-            print(message)
-            os.execvp(binary, [binary] + run_args)
-            os.exit(1)
-        else:
-            p, status = os.waitpid(pid, 0)
-
-        self.__scr = curses.initscr()
-        self.init_curses()
+        self.__execute(binary, [binary] + run_args, message)
 
     def play(self, n):
         g = self.__games[n]
@@ -357,6 +368,45 @@ class GameLauncher:
         self.status("Email changed")
         self.__commit_session()
 
+    def __child(self, num, frame):
+        print(frame)
+        os.waitpid(frame.f_locals['pid'], 0)
+
+    def __playexec(self, binary, args):
+        pid = os.fork()
+        signal.signal(signal.SIGCHLD, self.__child)
+        if pid == 0:
+            sys.stdin.close()
+            os.execvp(binary, args)
+        else:
+            tty.setraw(sys.stdin.fileno())
+            while True:
+                c = sys.stdin.read(1)
+                if c == 'q':
+                    break
+                else:
+                    print(c)
+            signal.signal(signal.SIGCHLD, signal.SIG_IGN)
+            os.kill(pid, signal.SIGTERM)
+            #os.waitpid(pid, 0)
+
+    def __termplay(self, record):
+        self.__execute("ttyplay", ["ttyplay", "-p", "-n", record],
+            custom = self.__playexec)
+
+    def watch(self, id):
+        session = self.__database.begin()
+        q = session.query(db.Playing).join(db.User).filter(db.User.id == id)
+
+        try:
+            playing = q.one()
+            # we need to watch the file recorded in playing
+            self.__termplay(playing.record)
+        except NoResultFound:
+            # that player is not actually playing
+            # maybe they quit since the menu was shown
+            pass
+
 class WatchMenu:
     offset = 2
     def draw_row(self, app, player, row):
@@ -380,10 +430,10 @@ class WatchMenu:
     def key(self, c, app):
         if c == ord('q'):
             app.pop_menu()
-        elif c >= ord('a') or c <= ord('z'):
+        elif c >= ord('a') and c <= ord('z'):
             which = c - ord('a')
             if which < len(self.__playing):
-                app.watch(self.__playing.id)
+                app.watch(self.__playing[which][0].id)
 
 class KeyInput:
     def __init__(self, echo, key, message, nextmenu):
