@@ -40,7 +40,7 @@ class TTYRecord:
           now.tm_sec)
 
     def binary(self):
-        return "ttyrec"
+        return "termrec"
 
     def args(self, a):
         return ["-e", ' '.join(a), self.__directory + "/" + self.__record]

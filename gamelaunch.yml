@@ -39,13 +39,13 @@ menus:
     main:
       - *register
       - *login
-      - *watch
+      #- *watch
       - *quit
 
     loggedin:
       - *changepass
       - *changeemail
-      - *watch
+      #- *watch
       - games
       - *quit
 
