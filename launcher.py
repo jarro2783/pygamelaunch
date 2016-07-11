@@ -2,7 +2,7 @@
 
 import curses
 import curses.ascii
-import db
+from gamelaunch import db
 import hashlib
 from jinja2 import Template
 import os
