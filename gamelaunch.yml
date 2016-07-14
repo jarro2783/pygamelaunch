@@ -35,6 +35,11 @@ templates:
     << : *quit
     title : Return to game menu
 
+actions:
+    register: |
+      mkdir -p /home/pygame/users/{{user}}/ttyrec
+      touch /home/pygame/users/{{user}}/nh360config.txt
+
 menus:
     main:
       - *register
@@ -58,10 +63,10 @@ games:
         - *play
         - *return
 
-      root: &nh360root "/home/nh360"
-      options: &nh360options "/home/nh360/{{user}}/.nethackrc"
+      root: &nh360root "/home/pygame/nh360"
+      options: &nh360options "/home/pygame/users/{{user}}/nh360config.txt"
       volumes: 
         - [*nh360options, "/root/.nethackrc"]
-        - ["/home/nh360/game", "/home/nethack/game"]
+        - ["/home/pygame/nh360/game", "/home/nethack/game"]
       image: jarro2783/nethack
-      recordings: '/home/nh360/{{user}}/ttyrec'
+      recordings: '/home/pygame/users/{{user}}/ttyrec'

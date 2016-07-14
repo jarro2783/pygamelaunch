@@ -55,6 +55,12 @@ class GameLauncher:
 
     def __init__(self, scr, config):
         menus = config['menus']
+
+        if 'actions' in config:
+            self.__actions = config['actions']
+        else:
+            self.__actions = {}
+
         self.__scr = scr
         self.__menustack = []
         self.__exiting = False
@@ -214,9 +220,15 @@ class GameLauncher:
 
         try:
             db.add_user(self.__database, u)
+
             self.status("Created new user")
             self.__pop_menu()
             self.__do_login(user)
+            if 'register' in self.__actions:
+                action = render_template(self.__actions['register'])
+                p = os.popen("bash -c '" + action + "'", "r")
+                p.read()
+                p.close()
         except IntegrityError:
             self.status("Username already in use")
             self.__pop_menu()
