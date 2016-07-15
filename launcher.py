@@ -454,13 +454,16 @@ class KeyInput:
         self.__next = nextmenu
         self.__values = {}
         self.__key = key
-        self.__message = message
+        self.__message = message + " Empty input cancels."
 
     def key(self, c, app):
         scr = app.screen()
         ch = chr(c)
         if c == ord('\n'):
-            self.__do_next(app)
+            if self.__text == "":
+                app.pop_menu()
+            else:
+                self.__do_next(app)
         elif c == curses.KEY_BACKSPACE or c == 127:
             if len(self.__text) > 0:
                 self.__text = self.__text[0: -1]
@@ -489,16 +492,17 @@ class KeyInput:
         app.push_menu(self)
 
     def draw(self, app):
-        app.screen().addstr(1,1, self.__message + ": ")
+        app.screen().addstr(1,1, self.__message)
+        app.screen().move(3, 1)
 
 
 class UserNameMenu(KeyInput):
     def __init__(self, n):
-        super().__init__(True, "user", "Enter your username", n)
+        super().__init__(True, "user", "Enter your username.", n)
 
 class PasswordMenu(KeyInput):
     def __init__(self, n):
-        super().__init__(False, "password", "Enter your password", n)
+        super().__init__(False, "password", "Enter your password.", n)
 
 class DoLoginMenu:
     def start(self, app, values):
@@ -510,7 +514,7 @@ class DoRegisterMenu:
 
 class EmailMenu(KeyInput):
     def __init__(self, n):
-        super().__init__(True, "email", "Enter your email address", n)
+        super().__init__(True, "email", "Enter your email address.", n)
 
 class ChangePasswordMenu:
     def start(self, app, values):
