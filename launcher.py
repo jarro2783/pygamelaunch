@@ -225,7 +225,7 @@ class GameLauncher:
             self.__pop_menu()
             self.__do_login(user)
             if 'register' in self.__actions:
-                action = render_template(self.__actions['register'])
+                action = self.render_template(self.__actions['register'])
                 p = os.popen("bash -c '" + action + "'", "r")
                 p.read()
                 p.close()
