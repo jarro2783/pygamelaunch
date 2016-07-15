@@ -58,7 +58,6 @@ games:
     - name: Nethack 3.6.0
       arguments: ["-u", "{{ user }}"]
       menu:
-        - *watch
         - *options
         - *play
         - *return
