@@ -7,8 +7,8 @@ import os
 Base = declarative_base()
 
 class Database:
-    def __init__(self):
-        self.__engine = sqlalchemy.create_engine('sqlite:///users.db')
+    def __init__(self, path = "users.db"):
+        self.__engine = sqlalchemy.create_engine('sqlite:///' + path)
         self.__Session = sqlalchemy.orm.sessionmaker()
         self.__Session.configure(bind=self.__engine)
 

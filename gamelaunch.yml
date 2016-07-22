@@ -38,7 +38,7 @@ templates:
 actions:
     register: |
       mkdir -p /home/pygame/users/{{user}}/ttyrec
-      touch /home/pygame/users/{{user}}/nh360config.txt
+      cp /home/pygame/nh360config.txt /home/pygame/users/{{user}}/nh360config.txt
 
 menus:
     main:
