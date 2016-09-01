@@ -1,5 +1,12 @@
 #!/usr/bin/python3
 
+"""The pygamelaunch launcher.
+
+This is the main pygamelaunch launcher program. It starts the ncurses game
+launcher and allows the user to login and play any games defined in
+gamelaunch.yml.
+"""
+
 import bcrypt
 import curses
 import curses.ascii
