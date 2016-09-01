@@ -11,7 +11,6 @@ import bcrypt
 import curses
 import curses.ascii
 from gamelaunch import db
-import hashlib
 from jinja2 import Template
 import os
 import signal
@@ -22,18 +21,19 @@ import time
 import tty
 import yaml
 
-import pprint
+VERSION = 0.1
 
-version = 0.1
-
-def render_template(t, **kwargs):
-    tem = Template(t)
+def render_template(text, **kwargs):
+    """Renders a template with the given arguments."""
+    tem = Template(text)
     return tem.render(kwargs)
 
-class InvalidUser:
+class InvalidUser(Exception):
+    """Thrown as an exception to indicate an invalid user."""
     pass
 
 class TTYRecord:
+    """Manages the arguments used to record a session."""
     def __init__(self, directory):
         self.__directory = directory
 
@@ -50,8 +50,9 @@ class TTYRecord:
     def binary(self):
         return "termrec"
 
-    def args(self, a):
-        return ["-e", ' '.join(a), self.__directory + "/" + self.__record]
+    def args(self, arguments):
+        return ["-e",
+                ' '.join(arguments), self.__directory + "/" + self.__record]
 
     def file(self):
         return self.__directory + "/" + self.__record
