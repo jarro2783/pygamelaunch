@@ -41,11 +41,11 @@ class TTYRecord:
 
         self.__record = "{}-{:02}-{:02}-{:02}-{:02}-{:02}.ttyrec".\
             format(now.tm_year,
-          now.tm_mon,
-          now.tm_mday,
-          now.tm_hour,
-          now.tm_min,
-          now.tm_sec)
+                   now.tm_mon,
+                   now.tm_mday,
+                   now.tm_hour,
+                   now.tm_min,
+                   now.tm_sec)
 
     def binary(self):
         return "termrec"
@@ -94,7 +94,7 @@ class GameLauncher:
 
     def init_curses(self):
         scr = self.__scr
-        y,x = scr.getmaxyx()
+        y, x = scr.getmaxyx()
         ry = self.WinStart
 
         self.__window = curses.newwin(y - ry - 1, x, ry, 0)
@@ -221,10 +221,10 @@ class GameLauncher:
 
     def register(self, values):
         user = values['user']
-        u = db.create_user(user,
+        u = db.create_user(
+            user,
             values['password'],
-            values['email']
-        )
+            values['email'])
 
         try:
             db.add_user(self.__database, u)
@@ -242,7 +242,7 @@ class GameLauncher:
             self.__pop_menu()
             self.push_menu('main')
 
-    def __execute(self, binary, args, message = None, custom = None):
+    def __execute(self, binary, args, message=None, custom=None):
         curses.endwin()
 
         if custom is not None:
@@ -291,8 +291,8 @@ class GameLauncher:
             for v in g['volumes']:
                 docker.append("-v")
                 volume = "{}:{}".format(
-                  self.render_template(v[0]),
-                  self.render_template(v[1])
+                    self.render_template(v[0]),
+                    self.render_template(v[1])
                 )
                 docker.append(volume)
 
@@ -305,15 +305,15 @@ class GameLauncher:
 
         tty = TTYRecord(self.render_template(g['recordings']))
         self.__start_playing(tty.file())
-        self.__docker("Loading...", docker, g['image'], args,
-            tty)
+        self.__docker("Loading...",
+                      docker, g['image'], args, tty)
         self.__stop_playing()
 
     def __start_playing(self, tty):
         session = self.__database.begin()
         user = session.\
             query(db.User).filter(db.User.username == self.__user).one()
-        playing = db.Playing(id = user.id, record = tty, since = time.time())
+        playing = db.Playing(id=user.id, record=tty, since=time.time())
         session.add(playing)
         session.commit()
 
@@ -333,7 +333,8 @@ class GameLauncher:
         return playing
 
     def edit_options(self, path):
-        args = ["docker",
+        args = [
+            "docker",
             "run",
             "--rm",
             "-it",
@@ -411,8 +412,9 @@ class GameLauncher:
             #os.waitpid(pid, 0)
 
     def __termplay(self, record):
-        self.__execute("ttyplay", ["ttyplay", "-p", "-n", record],
-            custom = self.__playexec)
+        self.__execute("ttyplay",
+                       ["ttyplay", "-p", "-n", record],
+                       custom=self.__playexec)
 
     def watch(self, id):
         session = self.__database.begin()
@@ -431,10 +433,11 @@ class WatchMenu:
     offset = 2
     def draw_row(self, app, player, row):
         playing = player[0]
-        user = player[1];
+        user = player[1]
         screen = app.screen()
-        screen.addstr(1, self.offset + row,
-          "{})  {}".format(chr(row + ord('a')), user.username))
+        screen.addstr(
+            1, self.offset + row,
+            "{})  {}".format(chr(row + ord('a')), user.username))
 
     def update_playing(self, app):
         playing = app.playing()
@@ -500,7 +503,7 @@ class KeyInput:
         app.push_menu(self)
 
     def draw(self, app):
-        app.screen().addstr(1,1, self.__message)
+        app.screen().addstr(1, 1, self.__message)
         app.screen().move(3, 1)
 
 
