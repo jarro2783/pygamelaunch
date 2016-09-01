@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import bcrypt
 import curses
 import curses.ascii
 from gamelaunch import db
@@ -154,10 +155,10 @@ class GameLauncher:
         u = sess.query(db.User).filter(db.User.username == user).first()
 
         if u is not None:
-            sha = hashlib.sha256(u.salt)
-            sha.update(pw.encode('utf-8'))
+            existing = u.password.encode('utf-8')
+            hashed = bcrypt.hashpw(pw.encode('utf-8'), existing)
 
-            if sha.digest() == u.password:
+            if hashed == existing:
                 self.__pop_menu()
                 self.__do_login(user)
                 return

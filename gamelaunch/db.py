@@ -1,8 +1,9 @@
+import bcrypt
+import hashlib
+import os
 import sqlalchemy
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, ForeignKey
-import hashlib
-import os
 
 Base = declarative_base()
 
@@ -41,21 +42,17 @@ class Playing(Base):
 class CreateUser:
     def __init__(self, user):
         self.__user = user
-        self.__salt = os.urandom(128)
-        self.__hash = hashlib.sha256(self.__salt)
+        self.__salt = ''
 
     def add_pass(self, c):
-        self.__hash.update(c.encode('utf-8'))
+        self.__hash = bcrypt.hashpw(c.encode('utf-8'), bcrypt.gensalt())
 
     def create(self):
-        return User(username=self.__user, password=self.__hash.digest(),
+        return User(username=self.__user, password=self.__hash,
             salt=self.__salt)
 
 def create_password(password):
-    salt = os.urandom(16)
-    s = hashlib.sha256(salt)
-    s.update(password.encode('utf-8'))
-    return (salt, s.digest())
+    return ('', bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()))
 
 def update_password(user, password):
     salt, digest = create_password(password)
