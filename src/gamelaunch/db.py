@@ -30,6 +30,7 @@ class Database:
 
 class User(Base):
     """A user row in the users database."""
+    # pylint: disable=too-few-public-methods, no-init
 
     __tablename__ = 'users'
 
@@ -45,6 +46,7 @@ class User(Base):
 
 class Playing(Base):
     """A row representing a currently playing user."""
+    # pylint: disable=too-few-public-methods, no-init
     __tablename__ = 'playing'
 
     id = Column(Integer, ForeignKey('users.id'), primary_key=True)
