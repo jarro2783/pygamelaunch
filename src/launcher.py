@@ -258,7 +258,10 @@ class GameLauncher:
             if pid == 0:
                 if message is not None:
                     print(message)
-                os.execvp(binary, args)
+                try:
+                    os.execvp(binary, args)
+                except FileNotFoundError as e:
+                    print(e)
                 os.exit(1)
             else:
                 p, status = os.waitpid(pid, 0)
@@ -355,6 +358,7 @@ class GameLauncher:
         if pid == 0:
             print("Loading editor...")
             print("Mounting: " + path + " as /.nethackrc")
+
             os.execv("/usr/bin/docker", args)
         else:
             os.waitpid(pid, 0)
