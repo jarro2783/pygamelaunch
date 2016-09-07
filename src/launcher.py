@@ -262,7 +262,7 @@ class GameLauncher:
                     os.execvp(binary, args)
                 except FileNotFoundError as e:
                     print(e)
-                os.exit(1)
+                sys.exit(1)
             else:
                 p, status = os.waitpid(pid, 0)
 
