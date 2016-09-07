@@ -48,16 +48,21 @@ class TTYRecord:
                    now.tm_sec)
 
     def binary(self):
+        """Returns the termrec binary name."""
+        #pylint: disable=no-self-use
         return "termrec"
 
     def args(self, arguments):
+        """Build the arguments to run the recorder."""
         return ["-e",
                 ' '.join(arguments), self.__directory + "/" + self.__record]
 
     def file(self):
+        """Build the output file name."""
         return self.__directory + "/" + self.__record
 
 class GameLauncher:
+    """The main game launcher class."""
 
     LoginLine = 3
     WinStart = 4
