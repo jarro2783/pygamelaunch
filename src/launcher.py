@@ -272,7 +272,6 @@ class GameLauncher:
     def __docker(self, message, docker, image, args, record=None):
 
         docker = [
-            "docker",
             "run",
             "--rm",
             "-it"
