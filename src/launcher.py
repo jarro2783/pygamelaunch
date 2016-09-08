@@ -315,7 +315,7 @@ class GameLauncher:
         tty = TTYRecord(self.render_template(g['recordings']))
         self.__start_playing(tty.file())
         self.__docker("Loading...",
-                      docker, g['image'], args, tty)
+                      docker, g['image'], args)
         self.__stop_playing()
 
     def __start_playing(self, tty):
