@@ -13,6 +13,7 @@ import curses.ascii
 from gamelaunch import db
 from jinja2 import Template
 import os
+import pygame
 import signal
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
@@ -31,35 +32,6 @@ def render_template(text, **kwargs):
 class InvalidUser(Exception):
     """Thrown as an exception to indicate an invalid user."""
     pass
-
-class TTYRecord:
-    """Manages the arguments used to record a session."""
-    def __init__(self, directory):
-        self.__directory = directory
-
-        now = time.localtime()
-
-        self.__record = "{}-{:02}-{:02}-{:02}-{:02}-{:02}.ttyrec".\
-            format(now.tm_year,
-                   now.tm_mon,
-                   now.tm_mday,
-                   now.tm_hour,
-                   now.tm_min,
-                   now.tm_sec)
-
-    def binary(self):
-        """Returns the termrec binary name."""
-        #pylint: disable=no-self-use
-        return "termrec"
-
-    def args(self, arguments):
-        """Build the arguments to run the recorder."""
-        return ["-e",
-                ' '.join(arguments), self.__directory + "/" + self.__record]
-
-    def file(self):
-        """Build the output file name."""
-        return self.__directory + "/" + self.__record
 
 class GameLauncher:
     """The main game launcher class."""
@@ -269,7 +241,7 @@ class GameLauncher:
         self.__scr = curses.initscr()
         self.init_curses()
 
-    def __docker(self, message, docker, image, args, record=None):
+    def __docker(self, message, docker, image, args):
 
         docker = [
             "run",
@@ -280,12 +252,8 @@ class GameLauncher:
         docker.append(image)
         docker.extend(args)
 
-        if record is not None:
-            binary = record.binary()
-            run_args = record.args(docker)
-        else:
-            binary = "/usr/bin/docker"
-            run_args = docker
+        binary = "/usr/bin/docker"
+        run_args = docker
 
         self.__execute(binary, [binary] + run_args, message)
 
@@ -311,17 +279,16 @@ class GameLauncher:
             else:
                 args.append(self.render_template(a))
 
-        tty = TTYRecord(self.render_template(g['recordings']))
-        self.__start_playing(tty.file())
+        self.__start_playing()
         self.__docker("Loading...",
                       docker, g['image'], args)
         self.__stop_playing()
 
-    def __start_playing(self, tty):
+    def __start_playing(self):
         session = self.__database.begin()
         user = session.\
             query(db.User).filter(db.User.username == self.__user).one()
-        playing = db.Playing(id=user.id, record=tty, since=time.time())
+        playing = db.Playing(id=user.id, since=time.time())
         session.add(playing)
         session.commit()
 
