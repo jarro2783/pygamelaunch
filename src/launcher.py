@@ -603,9 +603,9 @@ class Menu:
             scr.addstr(i, 1, f)
             i += 1
 
-    def key(self, c, _):
-        if key in self.__keys:
-            keydata = self.__keys[key]
+    def key(self, pressed, _):
+        if pressed in self.__keys:
+            keydata = self.__keys[pressed]
             self.__runner.run(keydata['action'])
 
     def action(self, key):
