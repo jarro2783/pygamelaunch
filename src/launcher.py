@@ -636,25 +636,27 @@ class Menu:
             scr.addstr(i, 1, f)
             i += 1
 
-    def key(self, c, app):
-        if c in self.__keys:
-            a = self.__keys[c]
-            self.__runner.run(a['action'])
+    def key(self, c, _):
+        if key in self.__keys:
+            keydata = self.__keys[key]
+            self.__runner.run(keydata['action'])
 
     def action(self, key):
+        """Return the action for the specified key."""
         return self.__keys[key]['action']
 
 
 def run(scr):
+    """The main game runner. Intended to be run inside a curses wrapper."""
+    file = open("gamelaunch.yml")
+    config = yaml.load(file)
 
-    f = open("gamelaunch.yml")
-    m = yaml.load(f)
-
-    game = GameLauncher(scr, m)
+    game = GameLauncher(scr, config)
 
     game.run()
 
 def main():
+    """The main function which calls the curses wrapper."""
     curses.wrapper(run)
 
 if __name__ == "__main__":
