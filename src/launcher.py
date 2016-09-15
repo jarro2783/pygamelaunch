@@ -13,7 +13,6 @@ import curses.ascii
 from gamelaunch import db
 from jinja2 import Template
 import os
-import pygame
 import signal
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound

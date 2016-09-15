@@ -1,0 +1,13 @@
+rule linter
+    command = python3 -m pylint src/$SOURCE
+
+build lint: phony lint_launcher lint_gamelaunch lint_run
+
+build lint_launcher: linter
+    SOURCE=launcher.py
+
+build lint_run: linter
+    SOURCE=run.py
+
+build lint_gamelaunch: linter
+    SOURCE=gamelaunch
