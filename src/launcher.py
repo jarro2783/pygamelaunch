@@ -572,37 +572,41 @@ class ChoiceRunner:
     }
 
 class Menu:
-    def __init__(self, y, app, **kwargs):
+    """The main game menu class."""
+    def __init__(self, items, app, **kwargs):
         self.__runner = ChoiceRunner(app, **kwargs)
         self.__lines = []
         self.__keys = {}
         self.__args = kwargs
         # menus can either be an array describing the menu,
         # or a string that the engine expands to some menu items
-        for f in y:
-            if f is not "blank" and isinstance(f, str):
-                menus = app.generate_menus(f)
+        for line in items:
+            if line is not "blank" and isinstance(line, str):
+                menus = app.generate_menus(line)
                 for i in menus:
                     self.__add_item(i, app)
             else:
-                self.__add_item(f, app)
+                self.__add_item(line, app)
 
-    def __add_item(self, f, app):
-        if f == "blank":
+    def __add_item(self, line, app):
+        """Add a menu item to the menu."""
+        if line == "blank":
             self.__lines.append("")
         else:
-            text = app.render_template(f['title'], **self.__args)
-            self.__keys[ord(f['key'])] = f
-            self.__lines.append("{}) {}".format(f['key'], text))
+            text = app.render_template(line['title'], **self.__args)
+            self.__keys[ord(line['key'])] = line
+            self.__lines.append("{}) {}".format(line['key'], text))
 
     def draw(self, app):
+        """Draw all the lines in a menu."""
         i = 1
         scr = app.screen()
-        for f in self.__lines:
-            scr.addstr(i, 1, f)
+        for line in self.__lines:
+            scr.addstr(i, 1, line)
             i += 1
 
     def key(self, pressed, _):
+        """Called on a key press."""
         if pressed in self.__keys:
             keydata = self.__keys[pressed]
             self.__runner.run(keydata['action'])
