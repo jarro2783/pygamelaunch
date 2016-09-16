@@ -550,13 +550,13 @@ class ChoiceRunner:
         else:
             self.__app.push_menu(PasswordMenu(ChangePasswordMenu()))
 
-    def changeemail(self, args):
+    def changeemail(self, _):
         if self.__app.user() == "":
             self.status("You are not logged in")
         else:
             self.__app.push_menu(EmailMenu(ChangeEmailMenu()))
 
-    def watch(self, args):
+    def watch(self, _):
         self.__app.push_menu(WatchMenu())
 
     __commands = {
