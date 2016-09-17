@@ -508,7 +508,8 @@ class ChangePasswordMenu:
         app.redraw()
 
 class ChangeEmailMenu:
-    def start(self, app, values):
+    @staticmethod
+    def start(app, values):
         app.change_email(values['email'])
         app.redraw()
 
@@ -541,22 +542,30 @@ class ChoiceRunner:
     def edit(self, args):
         self.__app.edit_options(self.__render(args[0]))
 
-    def __render(self, s):
-        return self.__app.render_template(s, **self.__args)
+    def __render(self, text):
+        """Render the menu."""
+        return self.__app.render_template(text, **self.__args)
 
-    def changepass(self, args):
+    def changepass(self, _):
+        """Go to the change password menu."""
         if self.__app.user() == "":
-            self.status("You are not logged in")
+            pass
+            # TODO fix this once change pass is implemented
+            #self.status("You are not logged in")
         else:
             self.__app.push_menu(PasswordMenu(ChangePasswordMenu()))
 
     def changeemail(self, _):
+        """Go to the change email menu."""
         if self.__app.user() == "":
-            self.status("You are not logged in")
+            pass
+            # TODO fix this once change email is implemented
+            #self.status("You are not logged in")
         else:
             self.__app.push_menu(EmailMenu(ChangeEmailMenu()))
 
     def watch(self, _):
+        """Change to the watch menu."""
         self.__app.push_menu(WatchMenu())
 
     __commands = {
