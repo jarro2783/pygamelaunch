@@ -14,11 +14,11 @@ class Game:
         self.__record_user = record_user
 
     def run(self):
-        executor = pyterm.ExecProgram(self.__program, self.__args)
+        executor = pyterm.ExecProgram(self.__program, *self.__args)
         net_writer = pyterm.ExecWriter("termrecord_client",
             "-host", self.__record_host, "-port", self.__record_port,
             "-user", self.__record_user, "-send")
-        capture = pyterm.Capture(program, writers=[net_writer])
+        capture = pyterm.Capture(executor, writers=[net_writer])
         capture.run()
 
 class Watcher:
