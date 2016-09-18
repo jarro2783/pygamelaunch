@@ -11,12 +11,13 @@ import bcrypt
 import curses
 import curses.ascii
 from gamelaunch import db
-from jinja2 import Template
-import os
-import signal
+import gamelaunch
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
+import os
+import signal
 import sys
+from jinja2 import Template
 import time
 import tty
 import yaml
@@ -254,7 +255,10 @@ class GameLauncher:
         binary = "/usr/bin/docker"
         run_args = docker
 
-        self.__execute(binary, [binary] + run_args, message)
+        game = gamelaunch.Game(binary, docker, "localhost", 34234, self.__user)
+        game.run()
+
+        #self.__execute(binary, [binary] + run_args, message)
 
     def play(self, n):
         g = self.__games[n]

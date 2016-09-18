@@ -7,7 +7,7 @@ class Game:
                  record_host,
                  record_port,
                  record_user):
-        self.__program = pyterm.ExecProgram("program", *arguments)
+        self.__program = pyterm.ExecProgram(program, *arguments)
         net_writer = pyterm.ExecWriter("termrecord_client",
             "-host", record_host, "-port", record_port,
             "-user", record_user, "-send")
