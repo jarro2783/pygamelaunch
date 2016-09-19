@@ -55,6 +55,7 @@ class GameLauncher:
         self.__template_args = {}
 
         self.__database = db.Database()
+        self.__session = None
 
         self.__init_games(config['games'])
 
@@ -63,14 +64,17 @@ class GameLauncher:
         self.push_menu("main")
 
     def user(self):
+        """Get the logged in user."""
         return self.__user
 
     def redraw(self):
+        """Redraw the window."""
         self.__window.clear()
         self.__menustack[-1].draw(self)
         self.__window.refresh()
 
     def init_curses(self):
+        """Initialise the screen."""
         scr = self.__scr
         y, x = scr.getmaxyx()
         ry = self.WinStart
@@ -86,19 +90,23 @@ class GameLauncher:
 
 
     def __init_games(self, games):
+        """Initialise the game numbers."""
         self.__games = games
 
         i = 0
-        for f in self.__games:
-            f['number'] = i
+        for game in self.__games:
+            game['number'] = i
             i += 1
 
     def push_menu(self, menu):
+        """Push a menu onto the menu stack, creating a menu from a string
+        if necessary."""
         if isinstance(menu, str):
             menu = Menu(self.__menus[menu], self)
         self.__push_menu(menu)
 
     def __push_menu(self, menu):
+        """The real menu push that redraws the window."""
         self.__menustack.append(menu)
         self.__window.clear()
         menu.draw(self)
@@ -173,11 +181,11 @@ class GameLauncher:
     def generate_menus(self, name):
         if name == "games":
             games = ["blank"]
-            for f in self.__games:
-                i = f['number']
+            for game in self.__games:
+                i = game['number']
                 games.append({
                     "key" : chr(ord('0') + i + 1),
-                    "title" : f['name'],
+                    "title" : game['name'],
                     "action" : "game {}".format(i)
                 })
 
@@ -255,8 +263,12 @@ class GameLauncher:
         binary = "/usr/bin/docker"
 
         curses.endwin()
-        game = gamelaunch.Game(binary,
-            docker, "localhost", "34234", self.__user)
+        game = gamelaunch.Game(
+            binary,
+            docker,
+            "localhost",
+            "34234",
+            self.__user)
         game.run()
         self.__scr = curses.initscr()
         self.init_curses()
@@ -264,30 +276,30 @@ class GameLauncher:
         #self.__execute(binary, [binary] + run_args, message)
 
     def play(self, n):
-        g = self.__games[n]
+        game = self.__games[n]
 
         docker = []
         args = []
 
-        if 'volumes' in g:
-            for v in g['volumes']:
+        if 'volumes' in game:
+            for volumes in game['volumes']:
                 docker.append("-v")
                 volume = "{}:{}".format(
-                    self.render_template(v[0]),
-                    self.render_template(v[1])
+                    self.render_template(volumes[0]),
+                    self.render_template(volumes[1])
                 )
                 docker.append(volume)
 
-        if 'arguments' in g:
-            a = g['arguments']
-            if isinstance(a, list):
-                args.extend(self.render_template(a))
+        if 'arguments' in game:
+            game_args = game['arguments']
+            if isinstance(game_args, list):
+                args.extend(self.render_template(game_args))
             else:
-                args.append(self.render_template(a))
+                args.append(self.render_template(game_args))
 
         self.__start_playing()
         self.__docker("Loading...",
-                      docker, g['image'], args)
+                      docker, game['image'], args)
         self.__stop_playing()
 
     def __start_playing(self):
@@ -356,26 +368,31 @@ class GameLauncher:
         return self.__session
 
     def __commit_session(self):
+        """Commit the database session."""
         self.__session.commit()
         self.__session = None
 
     def change_password(self, password):
+        """Change the user's password."""
         user = self.__get_user(self.__user)
         db.update_password(user, password)
         self.status("Password changed")
         self.__commit_session()
 
     def change_email(self, email):
+        """Change the user's email."""
         user = self.__get_user(self.__user)
         user.email = email
         self.status("Email changed")
         self.__commit_session()
 
     def __child(self, num, frame):
+        """Debugging sigchld."""
         print(frame)
         os.waitpid(frame.f_locals['pid'], 0)
 
     def __playexec(self, binary, args):
+        """Execute the game watcher."""
         pid = os.fork()
         signal.signal(signal.SIGCHLD, self.__child)
         if pid == 0:
@@ -384,11 +401,9 @@ class GameLauncher:
         else:
             tty.setraw(sys.stdin.fileno())
             while True:
-                c = sys.stdin.read(1)
-                if c == 'q':
+                char = sys.stdin.read(1)
+                if char == 'q':
                     break
-                else:
-                    print(c)
             signal.signal(signal.SIGCHLD, signal.SIG_IGN)
             os.kill(pid, signal.SIGTERM)
             #os.waitpid(pid, 0)
@@ -398,12 +413,14 @@ class GameLauncher:
                        ["ttyplay", "-p", "-n", record],
                        custom=self.__playexec)
 
-    def watch(self, id):
+    def watch(self, userid):
+        """Watch the game being played by userid."""
         session = self.__database.begin()
-        q = session.query(db.Playing).join(db.User).filter(db.User.id == id)
+        query = session.query(
+            db.Playing).join(db.User).filter(db.User.id == userid)
 
         try:
-            playing = q.one()
+            playing = query.one()
             # we need to watch the file recorded in playing
             self.__termplay(playing.record)
         except NoResultFound:
@@ -412,8 +429,13 @@ class GameLauncher:
             pass
 
 class WatchMenu:
+    """The menu to watch other games."""
     offset = 2
+    def __init__(self):
+        self.__playing = []
+
     def draw_row(self, app, player, row):
+        """Draw a single row in the watch menu."""
         playing = player[0]
         user = player[1]
         screen = app.screen()
@@ -422,6 +444,7 @@ class WatchMenu:
             "{})  {}".format(chr(row + ord('a')), user.username))
 
     def update_playing(self, app):
+        """Update the playing users."""
         playing = app.playing()
         self.__playing = playing
 
@@ -430,17 +453,20 @@ class WatchMenu:
             self.draw_row(app, player, row)
 
     def draw(self, app):
+        """Draw the watch menu."""
         self.update_playing(app)
 
-    def key(self, c, app):
-        if c == ord('q'):
+    def key(self, key, app):
+        """Handle a key press."""
+        if key == ord('q'):
             app.pop_menu()
-        elif c >= ord('a') and c <= ord('z'):
-            which = c - ord('a')
+        elif key >= ord('a') and key <= ord('z'):
+            which = key - ord('a')
             if which < len(self.__playing):
                 app.watch(self.__playing[which][0].id)
 
 class KeyInput:
+    """Base class for handling key input."""
     def __init__(self, echo, key, message, nextmenu):
         self.__text = ""
         self.__echo = echo
@@ -449,83 +475,92 @@ class KeyInput:
         self.__key = key
         self.__message = message + " Empty input cancels."
 
-    def key(self, c, app):
+    def key(self, key, app):
+        """Handle a key press."""
         scr = app.screen()
-        ch = chr(c)
-        if c == ord('\n'):
+        chcode = chr(key)
+        if key == ord('\n'):
             if self.__text == "":
                 app.pop_menu()
             else:
                 self.__do_next(app)
-        elif c == curses.KEY_BACKSPACE or c == 127:
+        elif key == curses.KEY_BACKSPACE or key == 127:
             if len(self.__text) > 0:
                 self.__text = self.__text[0: -1]
 
                 if self.__echo:
-                    y, x = scr.getyx()
-                    scr.move(y, x-1)
+                    ypos, xpos = scr.getyx()
+                    scr.move(ypos, xpos-1)
                     scr.delch()
                     scr.refresh()
 
-        elif curses.ascii.isgraph(ch):
-            self.__text += ch
+        elif curses.ascii.isgraph(chcode):
+            self.__text += chcode
 
             if self.__echo:
-                scr.addstr(ch)
+                scr.addstr(chcode)
                 scr.refresh()
 
     def __do_next(self, app):
+        """Do the next menu after taking input."""
         app.pop_menu(False)
         values = self.__values.copy()
         values[self.__key] = self.__text
         self.__next.start(app, values)
 
     def start(self, app, values):
+        """Set up the menu."""
         self.__values = values
         app.push_menu(self)
 
     def draw(self, app):
+        """Draw the actual key input menu."""
         app.screen().addstr(1, 1, self.__message)
         app.screen().move(3, 1)
 
 
 class UserNameMenu(KeyInput):
+    """A menu that takes a username as input."""
     def __init__(self, nextmenu):
         super().__init__(True, "user", "Enter your username.", nextmenu)
 
 class PasswordMenu(KeyInput):
-    def __init__(self, n):
+    """A menu that takes a password as input."""
+    def __init__(self, nextmenu):
         super().__init__(False, "password", "Enter your password.", nextmenu)
 
 class DoLoginMenu:
-    def start(self, app, values):
+    """A fake menu that does the actual login."""
+    @staticmethod
+    def start(app, values):
+        """Do the actual login."""
         app.login(values['user'], values['password'])
 
 class DoRegisterMenu:
-    def start(self, app, values):
+    """A fake menu that does the user registration."""
+    @staticmethod
+    def start(app, values):
+        """Do the user register."""
         app.register(values)
 
 class EmailMenu(KeyInput):
+    """A menu that takes an email address."""
     def __init__(self, nextmenu):
         super().__init__(True, "email", "Enter your email address.", nextmenu)
 
-class ChangePasswordMenu(KeyInput):
-    def __init__(self):
-        #TODO fix this
-        super().__init__(False,
-            "password", "Enter your new password.", None)
-
-    def start(self, app, values):
+class ChangePasswordMenu:
+    """Fake menu to do the actual change password."""
+    @staticmethod
+    def start(app, values):
+        """Run the change password."""
         app.change_password(values['password'])
         app.redraw()
 
-class ChangeEmailMenu(KeyInput):
-    def __init__(self):
-        #TODO fix this
-        super().__init__(True, "email", "Enter your new email.", None)
-
+class ChangeEmailMenu:
+    """Fake menu to do the actual change email."""
     @staticmethod
     def start(app, values):
+        """Run the change email."""
         app.change_email(values['email'])
         app.redraw()
 
