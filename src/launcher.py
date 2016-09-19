@@ -490,12 +490,12 @@ class KeyInput:
 
 
 class UserNameMenu(KeyInput):
-    def __init__(self, n):
-        super().__init__(True, "user", "Enter your username.", n)
+    def __init__(self, nextmenu):
+        super().__init__(True, "user", "Enter your username.", nextmenu)
 
 class PasswordMenu(KeyInput):
     def __init__(self, n):
-        super().__init__(False, "password", "Enter your password.", n)
+        super().__init__(False, "password", "Enter your password.", nextmenu)
 
 class DoLoginMenu:
     def start(self, app, values):
@@ -506,47 +506,64 @@ class DoRegisterMenu:
         app.register(values)
 
 class EmailMenu(KeyInput):
-    def __init__(self, n):
-        super().__init__(True, "email", "Enter your email address.", n)
+    def __init__(self, nextmenu):
+        super().__init__(True, "email", "Enter your email address.", nextmenu)
 
-class ChangePasswordMenu:
+class ChangePasswordMenu(KeyInput):
+    def __init__(self):
+        #TODO fix this
+        super().__init__(False,
+            "password", "Enter your new password.", None)
+
     def start(self, app, values):
         app.change_password(values['password'])
         app.redraw()
 
-class ChangeEmailMenu:
+class ChangeEmailMenu(KeyInput):
+    def __init__(self):
+        #TODO fix this
+        super().__init__(True, "email", "Enter your new email.", None)
+
     @staticmethod
     def start(app, values):
         app.change_email(values['email'])
         app.redraw()
 
 class ChoiceRunner:
+    """The choice runner runs actions that are specified in the config."""
     def __init__(self, app, **kwargs):
         self.__app = app
         self.__args = kwargs
 
     def run(self, command):
+        """Run an action."""
         parts = self.__app.render_template(command, **self.__args).split(' ')
         self.__commands[parts[0]](self, parts[1:])
 
-    def login(self, args):
+    def login(self, _):
+        """Login."""
         menu = UserNameMenu(PasswordMenu(DoLoginMenu()))
         self.__app.push_menu(menu)
 
     def game(self, args):
+        """Go to a game menu."""
         self.__app.game_menu(int(args[0]))
 
-    def quit(self, args):
+    def quit(self, _):
+        """Quit the current menu."""
         self.__app.quit()
 
     def play(self, args):
+        """Play a game."""
         self.__app.play(int(args[0]))
 
-    def register(self, args):
+    def register(self, _):
+        """Register a user."""
         menu = UserNameMenu(PasswordMenu(EmailMenu(DoRegisterMenu())))
         self.__app.push_menu(menu)
 
     def edit(self, args):
+        """Run the edit command."""
         self.__app.edit_options(self.__render(args[0]))
 
     def __render(self, text):
