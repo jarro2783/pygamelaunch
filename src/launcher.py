@@ -255,7 +255,8 @@ class GameLauncher:
         binary = "/usr/bin/docker"
 
         curses.endwin()
-        game = gamelaunch.Game(binary, docker, "localhost", 34234, self.__user)
+        game = gamelaunch.Game(binary,
+            docker, "localhost", "34234", self.__user)
         game.run()
         self.__scr = curses.initscr()
         self.init_curses()
