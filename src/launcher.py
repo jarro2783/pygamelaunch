@@ -77,9 +77,9 @@ class GameLauncher:
         """Initialise the screen."""
         scr = self.__scr
         height, width = scr.getmaxyx()
-        ry = self.WinStart
+        rowy = self.WinStart
 
-        self.__window = curses.newwin(height - ry - 1, width, ry, 0)
+        self.__window = curses.newwin(height - rowy - 1, width, rowy, 0)
         scr.addstr(1, 1, "Pygamelaunch")
 
         if self.__user != "":
@@ -113,9 +113,11 @@ class GameLauncher:
         self.__window.refresh()
 
     def __pop_menu(self):
+        """Do the actual menu pop."""
         self.__menustack.pop()
 
     def pop_menu(self, redraw=True):
+        """Remove a menu from the stack."""
         self.__pop_menu()
 
         if len(self.__menustack) > 0 and redraw:
@@ -123,56 +125,69 @@ class GameLauncher:
             self.__top().draw(self)
             self.__window.refresh()
 
-    def game_menu(self, n):
-        g = self.__games[n]
-        self.__push_menu(Menu(g['menu'], self, game=g))
+    def game_menu(self, which):
+        """Go to a game menu identified by which."""
+        menu = self.__games[which]
+        self.__push_menu(Menu(menu['menu'], self, game=menu))
 
     def run(self):
+        """Run the game launcher."""
         while not self.__exiting and len(self.__menustack) > 0:
-            c = self.__scr.getch()
-            self.__top().key(c, self)
+            key = self.__scr.getch()
+            self.__top().key(key, self)
 
     def quit(self):
+        """Quit from a menu."""
         #self.__exiting = True
         if len(self.__menustack) > 0:
             self.pop_menu()
 
     def __top(self):
+        """Get the top menu."""
         return self.__menustack[-1]
 
     def screen(self):
+        """Get the screen."""
         return self.__window
 
-    def login(self, user, pw):
+    def login(self, user, password):
+        """Try to login."""
         sess = self.__database.begin()
         user_record = sess.query(db.User).filter(
             db.User.username == user).first()
 
         if user_record is not None:
             existing = user_record.password.encode('utf-8')
-            hashed = bcrypt.hashpw(pw.encode('utf-8'), existing)
+            hashed = bcrypt.hashpw(password.encode('utf-8'), existing)
 
             if hashed == existing:
                 self.__pop_menu()
                 self.__do_login(user)
                 return
+        else:
+            # Hash something anyway to not give away the non-existence
+            # of a user
+            bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
 
         # we get here if not logged in
         self.redraw()
 
     def __do_login(self, user):
+        """Log a user in."""
         self.__user = user
         self.__template_args['user'] = user
         self.__logged_in("Logged in as: {}".format(user))
         self.push_menu("loggedin")
 
     def message_line(self, message, row):
+        """Print a message on a row."""
         scr = self.__scr
         _, width = scr.getmaxyx()
         scr.hline(row, 0, ' ', width)
         scr.addstr(row, 1, message)
 
     def status(self, message):
+        """Print to the status line."""
         height, _ = self.__scr.getmaxyx()
         self.message_line(message, height-1)
 
