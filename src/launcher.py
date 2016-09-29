@@ -195,7 +195,7 @@ class GameLauncher:
         """Print the logged in message."""
         self.message_line(message, self.LoginLine)
 
-    def __generate_menus(self, name):
+    def generate_menus(self, name):
         """Build items for a menus from a specific type of item."""
         if name == "games":
             games = ["blank"]
@@ -678,7 +678,7 @@ class Menu:
         # or a string that the engine expands to some menu items
         for line in items:
             if line is not "blank" and isinstance(line, str):
-                menus = app.__generate_menus(line)
+                menus = app.generate_menus(line)
                 for i in menus:
                     self.__add_item(i, app)
             else:
