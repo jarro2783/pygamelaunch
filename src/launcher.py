@@ -59,7 +59,7 @@ class GameLauncher:
 
         self.__init_games(config['games'])
 
-        self.init_curses()
+        self.__init_curses()
 
         self.push_menu("main")
 
@@ -73,7 +73,7 @@ class GameLauncher:
         self.__menustack[-1].draw(self)
         self.__window.refresh()
 
-    def init_curses(self):
+    def __init_curses(self):
         """Initialise the screen."""
         scr = self.__scr
         height, width = scr.getmaxyx()
@@ -268,7 +268,7 @@ class GameLauncher:
                 os.waitpid(pid, 0)
 
         self.__scr = curses.initscr()
-        self.init_curses()
+        self.__init_curses()
 
     def __docker(self, docker, image, args):
         """Run something in docker."""
@@ -293,7 +293,7 @@ class GameLauncher:
             self.__user)
         game.run()
         self.__scr = curses.initscr()
-        self.init_curses()
+        self.__init_curses()
 
         #self.__execute(binary, [binary] + run_args, message)
 
@@ -374,7 +374,7 @@ class GameLauncher:
             os.waitpid(pid, 0)
 
         self.__scr = curses.initscr()
-        self.init_curses()
+        self.__init_curses()
 
     def __get_user(self, username):
         """Get the userid for the username."""
