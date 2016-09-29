@@ -195,6 +195,7 @@ class GameLauncher:
             return "blank"
 
     def render_template(self, s, **kwargs):
+        """Render a template using the current variables."""
         if isinstance(s, list):
             result = []
             for t in s:
@@ -206,6 +207,7 @@ class GameLauncher:
             return render_template(s, **newargs)
 
     def register(self, values):
+        """Register a new user."""
         user = values['user']
         u = db.create_user(
             user,
@@ -229,6 +231,7 @@ class GameLauncher:
             self.push_menu('main')
 
     def __execute(self, binary, args, message=None, custom=None):
+        """Execute a program."""
         curses.endwin()
 
         if custom is not None:
@@ -250,6 +253,7 @@ class GameLauncher:
         self.init_curses()
 
     def __docker(self, message, docker, image, args):
+        """Run something in docker."""
 
         docker = [
             "run",
@@ -276,6 +280,7 @@ class GameLauncher:
         #self.__execute(binary, [binary] + run_args, message)
 
     def play(self, n):
+        """Launch a game."""
         game = self.__games[n]
 
         docker = []
@@ -303,6 +308,7 @@ class GameLauncher:
         self.__stop_playing()
 
     def __start_playing(self):
+        """The current user has started playing."""
         session = self.__database.begin()
         user = session.\
             query(db.User).filter(db.User.username == self.__user).one()
@@ -311,6 +317,7 @@ class GameLauncher:
         session.commit()
 
     def __stop_playing(self):
+        """The current user has stopped playing."""
         session = self.__database.begin()
         user = session.query(db.User).\
             filter(db.User.username == self.__user).one()
@@ -320,12 +327,14 @@ class GameLauncher:
         session.commit()
 
     def playing(self):
+        """Get the playing users."""
         s = self.__database.begin()
         playing = s.query(db.Playing, db.User).join(db.User).all()
         s.commit()
         return playing
 
     def edit_options(self, path):
+        """Edit the options for a game."""
         args = [
             "docker",
             "run",
@@ -351,6 +360,7 @@ class GameLauncher:
         self.init_curses()
 
     def __get_user(self, username):
+        """Get the userid for the username."""
         session = self.__begin_session()
         users = session.query(db.User).\
             filter(db.User.username == self.__user).all()
@@ -361,10 +371,8 @@ class GameLauncher:
             raise InvalidUser()
 
     def __begin_session(self):
+        """Begin a database session."""
         self.__session = self.__database.begin()
-        return self.__session
-
-    def __get_session(self):
         return self.__session
 
     def __commit_session(self):
@@ -408,21 +416,22 @@ class GameLauncher:
             os.kill(pid, signal.SIGTERM)
             #os.waitpid(pid, 0)
 
-    def __termplay(self, record):
-        self.__execute("ttyplay",
-                       ["ttyplay", "-p", "-n", record],
-                       custom=self.__playexec)
+    def __termplay(self, user):
+        watcher = gamelaunch.Watcher('localhost', '34234', user)
+        watcher.watch()
+        #self.__execute("ttyplay",
+        #               ["ttyplay", "-p", "-n", record],
+        #               custom=self.__playexec)
 
     def watch(self, userid):
         """Watch the game being played by userid."""
         session = self.__database.begin()
-        query = session.query(
-            db.Playing).join(db.User).filter(db.User.id == userid)
+        query = session.query(db.User).filter(db.User.id == userid)
 
         try:
             playing = query.one()
             # we need to watch the file recorded in playing
-            self.__termplay(playing.record)
+            self.__termplay(playing.username)
         except NoResultFound:
             # that player is not actually playing
             # maybe they quit since the menu was shown
