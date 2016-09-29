@@ -76,16 +76,16 @@ class GameLauncher:
     def init_curses(self):
         """Initialise the screen."""
         scr = self.__scr
-        y, x = scr.getmaxyx()
+        height, width = scr.getmaxyx()
         ry = self.WinStart
 
-        self.__window = curses.newwin(y - ry - 1, x, ry, 0)
+        self.__window = curses.newwin(height - ry - 1, width, ry, 0)
         scr.addstr(1, 1, "Pygamelaunch")
 
         if self.__user != "":
-            self.logged_in("Logged in as {}".format(self.__user))
+            self.__logged_in("Logged in as {}".format(self.__user))
         else:
-            self.logged_in("Not logged in")
+            self.__logged_in("Not logged in")
         scr.refresh()
 
 
@@ -145,10 +145,11 @@ class GameLauncher:
 
     def login(self, user, pw):
         sess = self.__database.begin()
-        u = sess.query(db.User).filter(db.User.username == user).first()
+        user_record = sess.query(db.User).filter(
+            db.User.username == user).first()
 
-        if u is not None:
-            existing = u.password.encode('utf-8')
+        if user_record is not None:
+            existing = user_record.password.encode('utf-8')
             hashed = bcrypt.hashpw(pw.encode('utf-8'), existing)
 
             if hashed == existing:
@@ -162,23 +163,25 @@ class GameLauncher:
     def __do_login(self, user):
         self.__user = user
         self.__template_args['user'] = user
-        self.logged_in("Logged in as: {}".format(user))
+        self.__logged_in("Logged in as: {}".format(user))
         self.push_menu("loggedin")
 
     def message_line(self, message, row):
         scr = self.__scr
-        _, x = scr.getmaxyx()
-        scr.hline(row, 0, ' ', x)
+        _, width = scr.getmaxyx()
+        scr.hline(row, 0, ' ', width)
         scr.addstr(row, 1, message)
 
     def status(self, message):
-        y, _ = self.__scr.getmaxyx()
-        self.message_line(message, y-1)
+        height, _ = self.__scr.getmaxyx()
+        self.message_line(message, height-1)
 
-    def logged_in(self, message):
+    def __logged_in(self, message):
+        """Print the logged in message."""
         self.message_line(message, self.LoginLine)
 
-    def generate_menus(self, name):
+    def __generate_menus(self, name):
+        """Build items for a menus from a specific type of item."""
         if name == "games":
             games = ["blank"]
             for game in self.__games:
@@ -194,37 +197,37 @@ class GameLauncher:
         elif name == "blank":
             return "blank"
 
-    def render_template(self, s, **kwargs):
+    def render_template(self, to_render, **kwargs):
         """Render a template using the current variables."""
-        if isinstance(s, list):
+        if isinstance(to_render, list):
             result = []
-            for t in s:
-                result.append(self.render_template(t, **kwargs))
+            for template in to_render:
+                result.append(self.render_template(template, **kwargs))
             return result
         else:
             newargs = self.__template_args
             newargs.update(kwargs)
-            return render_template(s, **newargs)
+            return render_template(to_render, **newargs)
 
     def register(self, values):
         """Register a new user."""
         user = values['user']
-        u = db.create_user(
+        user_record = db.create_user(
             user,
             values['password'],
             values['email'])
 
         try:
-            db.add_user(self.__database, u)
+            db.add_user(self.__database, user_record)
 
             self.status("Created new user")
             self.__pop_menu()
             self.__do_login(user)
             if 'register' in self.__actions:
                 action = self.render_template(self.__actions['register'])
-                p = os.popen("bash -c '" + action + "'", "r")
-                p.read()
-                p.close()
+                pipe = os.popen("bash -c '" + action + "'", "r")
+                pipe.read()
+                pipe.close()
         except IntegrityError:
             self.status("Username already in use")
             self.__pop_menu()
@@ -243,8 +246,8 @@ class GameLauncher:
                     print(message)
                 try:
                     os.execvp(binary, args)
-                except Exception as e:
-                    print("Error executing {}:{}".format(binary, e))
+                except OSError as error:
+                    print("Error executing {}:{}".format(binary, error))
                 sys.exit(1)
             else:
                 os.waitpid(pid, 0)
@@ -279,9 +282,9 @@ class GameLauncher:
 
         #self.__execute(binary, [binary] + run_args, message)
 
-    def play(self, n):
+    def play(self, which):
         """Launch a game."""
-        game = self.__games[n]
+        game = self.__games[which]
 
         docker = []
         args = []
@@ -416,7 +419,9 @@ class GameLauncher:
             os.kill(pid, signal.SIGTERM)
             #os.waitpid(pid, 0)
 
-    def __termplay(self, user):
+    @staticmethod
+    def __termplay(user):
+        """Watch a game."""
         watcher = gamelaunch.Watcher('localhost', '34234', user)
         watcher.watch()
         #self.__execute("ttyplay",
@@ -658,7 +663,7 @@ class Menu:
         # or a string that the engine expands to some menu items
         for line in items:
             if line is not "blank" and isinstance(line, str):
-                menus = app.generate_menus(line)
+                menus = app.__generate_menus(line)
                 for i in menus:
                     self.__add_item(i, app)
             else:
