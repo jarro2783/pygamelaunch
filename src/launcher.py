@@ -247,12 +247,12 @@ class GameLauncher:
                     print("Error executing {}:{}".format(binary, e))
                 sys.exit(1)
             else:
-                p, status = os.waitpid(pid, 0)
+                os.waitpid(pid, 0)
 
         self.__scr = curses.initscr()
         self.init_curses()
 
-    def __docker(self, message, docker, image, args):
+    def __docker(self, docker, image, args):
         """Run something in docker."""
 
         docker = [
@@ -303,8 +303,7 @@ class GameLauncher:
                 args.append(self.render_template(game_args))
 
         self.__start_playing()
-        self.__docker("Loading...",
-                      docker, game['image'], args)
+        self.__docker(docker, game['image'], args)
         self.__stop_playing()
 
     def __start_playing(self):
@@ -328,9 +327,9 @@ class GameLauncher:
 
     def playing(self):
         """Get the playing users."""
-        s = self.__database.begin()
-        playing = s.query(db.Playing, db.User).join(db.User).all()
-        s.commit()
+        session = self.__database.begin()
+        playing = session.query(db.Playing, db.User).join(db.User).all()
+        session.commit()
         return playing
 
     def edit_options(self, path):
@@ -363,7 +362,7 @@ class GameLauncher:
         """Get the userid for the username."""
         session = self.__begin_session()
         users = session.query(db.User).\
-            filter(db.User.username == self.__user).all()
+            filter(db.User.username == username).all()
 
         if len(users) != 0:
             return users[0]
@@ -394,7 +393,8 @@ class GameLauncher:
         self.status("Email changed")
         self.__commit_session()
 
-    def __child(self, num, frame):
+    @staticmethod
+    def __child(_, frame):
         """Debugging sigchld."""
         print(frame)
         os.waitpid(frame.f_locals['pid'], 0)
@@ -445,7 +445,6 @@ class WatchMenu:
 
     def draw_row(self, app, player, row):
         """Draw a single row in the watch menu."""
-        playing = player[0]
         user = player[1]
         screen = app.screen()
         screen.addstr(
