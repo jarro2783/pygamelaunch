@@ -18,24 +18,17 @@ def rungame(
     capture = pyterm.Capture(executor, writers=[net_writer])
     capture.run()
 
-class Watcher:
+def watch(server, port, watch_user):
     """Watch a running game."""
-    def __init__(self, server, port, watch_user):
-        self.__server = server
-        self.__port = port
-        self.__user = watch_user
-        self.__watcher = pyterm.ExecWatcher(
-            "termrecord_client",
-            [
-                "-host",
-                server,
-                "-port",
-                port,
-                "-user",
-                watch_user,
-                "-watch"
-            ])
-
-    def watch(self):
-        """Do the actual watching."""
-        self.__watcher.watch()
+    watcher = pyterm.ExecWatcher(
+        "termrecord_client",
+        [
+            "-host",
+            server,
+            "-port",
+            port,
+            "-user",
+            watch_user,
+            "-watch"
+        ])
+    watcher.watch()

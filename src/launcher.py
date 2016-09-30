@@ -436,11 +436,7 @@ class GameLauncher:
     @staticmethod
     def __termplay(user):
         """Watch a game."""
-        watcher = gamelaunch.Watcher('localhost', '34234', user)
-        watcher.watch()
-        #self.__execute("ttyplay",
-        #               ["ttyplay", "-p", "-n", record],
-        #               custom=self.__playexec)
+        gamelaunch.watch('localhost', '34234', user)
 
     def watch(self, userid):
         """Watch the game being played by userid."""
