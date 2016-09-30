@@ -636,7 +636,6 @@ class ChoiceRunner:
         """Go to the change password menu."""
         if self.__app.user() == "":
             pass
-            # TODO fix this once change pass is implemented
             #self.status("You are not logged in")
         else:
             self.__app.push_menu(PasswordMenu(ChangePasswordMenu()))
@@ -645,7 +644,6 @@ class ChoiceRunner:
         """Go to the change email menu."""
         if self.__app.user() == "":
             pass
-            # TODO fix this once change email is implemented
             #self.status("You are not logged in")
         else:
             self.__app.push_menu(EmailMenu(ChangeEmailMenu()))
