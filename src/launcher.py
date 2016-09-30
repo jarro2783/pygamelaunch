@@ -34,6 +34,7 @@ class InvalidUser(Exception):
     pass
 
 class GameLauncher:
+    #pylint: disable=too-many-instance-attributes
     """The main game launcher class."""
 
     LoginLine = 3
@@ -541,7 +542,6 @@ class KeyInput:
         app.screen().addstr(1, 1, self.__message)
         app.screen().move(3, 1)
 
-
 class UserNameMenu(KeyInput):
     """A menu that takes a username as input."""
     def __init__(self, nextmenu):
@@ -553,6 +553,7 @@ class PasswordMenu(KeyInput):
         super().__init__(False, "password", "Enter your password.", nextmenu)
 
 class DoLoginMenu:
+    #pylint: disable=too-few-public-methods
     """A fake menu that does the actual login."""
     @staticmethod
     def start(app, values):
@@ -560,6 +561,7 @@ class DoLoginMenu:
         app.login(values['user'], values['password'])
 
 class DoRegisterMenu:
+    #pylint: disable=too-few-public-methods
     """A fake menu that does the user registration."""
     @staticmethod
     def start(app, values):
@@ -572,6 +574,7 @@ class EmailMenu(KeyInput):
         super().__init__(True, "email", "Enter your email address.", nextmenu)
 
 class ChangePasswordMenu:
+    #pylint: disable=too-few-public-methods
     """Fake menu to do the actual change password."""
     @staticmethod
     def start(app, values):
@@ -580,6 +583,7 @@ class ChangePasswordMenu:
         app.redraw()
 
 class ChangeEmailMenu:
+    #pylint: disable=too-few-public-methods
     """Fake menu to do the actual change email."""
     @staticmethod
     def start(app, values):
