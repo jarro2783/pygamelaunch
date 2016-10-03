@@ -42,25 +42,33 @@ actions:
 
 menus:
     main:
-      - *register
-      - *login
-      - *watch
-      - *quit
+        items:
+            - *register
+            - *login
+            - *watch
+            - *quit
+        news: >
+          Welcome to AusNethack. This server is currently being tested.
 
     loggedin:
-      - *changepass
-      - *changeemail
-      - *watch
-      - games
-      - *quit
+        items:
+            - *changepass
+            - *changeemail
+            - *watch
+            - games
+            - *quit
 
 games:
     - name: Nethack 3.6.0
       arguments: ["-u", "{{ user }}"]
       menu:
-        - *options
-        - *play
-        - *return
+        items:
+          - *options
+          - *play
+          - *return
+        news: >
+          Welcome to Nethack 3.6.0. This is mostly vanilla Nethack, with
+          just a few additions to track game statistics.
 
       root: &nh360root "/home/pygame/nh360"
       options: &nh360options "/home/pygame/users/{{user}}/nh360config.txt"

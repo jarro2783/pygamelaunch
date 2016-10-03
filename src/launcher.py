@@ -18,6 +18,7 @@ import os
 import signal
 import sys
 from jinja2 import Template
+import textwrap
 import time
 import tty
 import yaml
@@ -666,14 +667,15 @@ class ChoiceRunner:
 
 class Menu:
     """The main game menu class."""
-    def __init__(self, items, app, **kwargs):
+    def __init__(self, definition, app, **kwargs):
         self.__runner = ChoiceRunner(app, **kwargs)
         self.__lines = []
         self.__keys = {}
         self.__args = kwargs
+        self.__news = definition['news'] if 'news' in definition else None
         # menus can either be an array describing the menu,
         # or a string that the engine expands to some menu items
-        for line in items:
+        for line in definition['items']:
             if line is not "blank" and isinstance(line, str):
                 menus = app.generate_menus(line)
                 for i in menus:
@@ -697,6 +699,14 @@ class Menu:
         for line in self.__lines:
             scr.addstr(i, 1, line)
             i += 1
+
+        # Draw the news
+        if self.__news is not None:
+            news = textwrap.wrap(self.__news)
+            i += 1
+            for line in news:
+                scr.addstr(i, 1, line)
+                i += 1
 
     def key(self, pressed, _):
         """Called on a key press."""
