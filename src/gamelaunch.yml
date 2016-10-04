@@ -36,44 +36,44 @@ templates:
     title : Return to game menu
 
 actions:
-    register: |
-      mkdir -p /home/pygame/users/{{user}}/ttyrec
-      cp /home/pygame/nh360config.txt /home/pygame/users/{{user}}/nh360config.txt
+  register: |
+    mkdir -p /home/pygame/users/{{user}}/ttyrec
+    cp /home/pygame/nh360config.txt /home/pygame/users/{{user}}/nh360config.txt
 
 menus:
-    main:
-        items:
-            - *register
-            - *login
-            - *watch
-            - *quit
-        news: >
-          Welcome to AusNethack. This server is currently being tested.
+  main:
+    items:
+      - *register
+      - *login
+      - *watch
+      - *quit
+    news: >
+      Welcome to AusNethack. This server is currently being tested.
 
-    loggedin:
-        items:
-            - *changepass
-            - *changeemail
-            - *watch
-            - games
-            - *quit
+  loggedin:
+    items:
+      - *changepass
+      - *changeemail
+      - *watch
+      - games
+      - *quit
 
 games:
-    - name: Nethack 3.6.0
-      arguments: ["-u", "{{ user }}"]
-      menu:
-        items:
-          - *options
-          - *play
-          - *return
-        news: >
-          Welcome to Nethack 3.6.0. This is mostly vanilla Nethack, with
-          just a few additions to track game statistics.
+  - name: Nethack 3.6.0
+    arguments: ["-u", "{{ user }}"]
+    menu:
+      items:
+        - *options
+        - *play
+        - *return
+      news: >
+        Welcome to Nethack 3.6.0. This is mostly vanilla Nethack, with
+        just a few additions to track game statistics.
 
-      root: &nh360root "/home/pygame/nh360"
-      options: &nh360options "/home/pygame/users/{{user}}/nh360config.txt"
-      volumes: 
-        - [*nh360options, "/root/.nethackrc"]
-        - ["/home/pygame/nh360/game", "/home/nethack/game"]
-      image: jarro2783/nethack
-      recordings: '/home/pygame/users/{{user}}/ttyrec'
+    root: &nh360root "/home/pygame/nh360"
+    options: &nh360options "/home/pygame/users/{{user}}/nh360config.txt"
+    volumes: 
+      - [*nh360options, "/root/.nethackrc"]
+      - ["/home/pygame/nh360/game", "/home/nethack/game"]
+    image: jarro2783/nethack
+    recordings: '/home/pygame/users/{{user}}/ttyrec'
