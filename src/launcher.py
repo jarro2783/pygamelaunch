@@ -82,7 +82,7 @@ class GameLauncher:
         rowy = self.WinStart
 
         self.__window = curses.newwin(height - rowy - 1, width, rowy, 0)
-        scr.addstr(1, 1, "Pygamelaunch")
+        scr.addstr(1, 1, "Pygamelaunch", curses.A_UNDERLINE)
 
         if self.__user != "":
             self.__logged_in("Logged in as {}".format(self.__user))
@@ -704,6 +704,9 @@ class Menu:
         if self.__news is not None:
             news = textwrap.wrap(self.__news)
             i += 1
+            #pylint: disable=no-member
+            scr.hline(i, 1, curses.ACS_HLINE, 77)
+            i += 2
             for line in news:
                 scr.addstr(i, 1, line)
                 i += 1
