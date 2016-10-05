@@ -62,9 +62,7 @@ class CreateUser:
 
     def add_pass(self, password):
         """Add a password to the user."""
-        self.__hash = bcrypt.hashpw(
-            password.encode('utf-8'),
-            bcrypt.gensalt())
+        self.__hash = create_password(password)
 
     def create(self):
         """Create the user database row."""
@@ -74,7 +72,7 @@ class CreateUser:
 
 def create_password(password):
     """Create a hashed password."""
-    return ('', bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()))
+    return ('', bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt(11)))
 
 def update_password(user, password):
     """Update a user's password hash."""
