@@ -25,7 +25,7 @@ import yaml
 
 VERSION = 0.1
 
-def render_template(text, **kwargs):
+def render_template(text: str, **kwargs) -> str:
     """Renders a template with the given arguments."""
     tem = Template(text)
     return tem.render(kwargs)
