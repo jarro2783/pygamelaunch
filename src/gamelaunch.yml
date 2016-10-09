@@ -77,3 +77,6 @@ games:
       - ["/home/pygame/nh360/game", "/home/nethack/game"]
     image: jarro2783/nethack
     recordings: '/home/pygame/users/{{user}}/ttyrec'
+recorder:
+  host: localhost
+  port: 34234
