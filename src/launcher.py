@@ -59,6 +59,14 @@ class GameLauncher:
         self.__database = db.Database()
         self.__session = None
 
+        if 'recorder' in config:
+            recorder = config['recorder']
+            self.__record_host = recorder['host']
+            self.__record_port = recorder['port']
+        else:
+            self.__record_host = 'localhost'
+            self.__record_port = 34234
+
         self.__init_games(config['games'])
 
         self.__init_curses()
@@ -290,8 +298,8 @@ class GameLauncher:
         gamelaunch.rungame(
             binary,
             docker,
-            "localhost",
-            "34234",
+            self.__record_host,
+            "{}".format(self.__record_port),
             self.__user)
         self.__scr = curses.initscr()
         self.__init_curses()
