@@ -286,7 +286,9 @@ class GameLauncher:
         docker = [
             "run",
             "--rm",
-            "-it"
+            "-it",
+            "--detach-keys",
+            "ctrl-@,ctrl-^",
         ] + docker
 
         docker.append(image)
