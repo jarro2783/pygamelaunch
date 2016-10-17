@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import db
+from gamelaunch import db
 
 def create_db():
     d = db.Database()
