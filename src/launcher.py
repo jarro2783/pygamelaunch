@@ -167,7 +167,7 @@ class GameLauncher:
             db.User.username == user).first()
 
         if user_record is not None:
-            existing = user_record.password.encode('utf-8')
+            existing = user_record.password
             hashed = bcrypt.hashpw(password.encode('utf-8'), existing)
 
             if hashed == existing:
