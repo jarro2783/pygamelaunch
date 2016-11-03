@@ -60,8 +60,9 @@ class Logins(Base):
 
     id = Column(Integer, primary_key=True)
     username = Column(String, index=True)
-    success = Column(Boolean)
+    success = Column(Boolean, index=True)
     date = Column(DateTime, default=sqlalchemy.func.now())
+    client = Column(String)
 
 class CreateUser:
     """Create a new user."""

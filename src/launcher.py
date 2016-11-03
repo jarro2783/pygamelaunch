@@ -165,7 +165,11 @@ class GameLauncher:
         """Logs a login attempt."""
         sess = self.__database.begin()
 
-        attempt = db.Logins(username=user, success=success)
+        client = ""
+        if 'SSH_CLIENT' in os.environ:
+            client = os.environ['SSH_CLIENT']
+
+        attempt = db.Logins(username=user, success=success, client=client)
         sess.add(attempt)
         sess.commit()
         sess.close()
