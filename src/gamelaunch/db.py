@@ -5,7 +5,7 @@ Looks after everything database related.
 import bcrypt
 import sqlalchemy
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import Boolean, DateTime, Column, Integer, String, ForeignKey
 
 Base = declarative_base()
 
@@ -39,6 +39,7 @@ class User(Base):
     password = Column(String)
     salt = Column(String)
     email = Column(String)
+    created = Column(DateTime, default=sqlalchemy.func.now())
 
     def __repr__(self):
         return "<User(id='{}', name='{}', pass='{}', salt='{}')>".format(
@@ -51,6 +52,16 @@ class Playing(Base):
 
     id = Column(Integer, ForeignKey('users.id'), primary_key=True)
     since = Column(Integer)
+
+class Logins(Base):
+    """A row representing a login attempt."""
+    # pylint: disable=too-few-public-methods, no-init
+    __tablename__ = 'logins'
+
+    id = Column(Integer, primary_key=True)
+    username = Column(String, index=True)
+    success = Column(Boolean)
+    date = Column(DateTime, default=sqlalchemy.func.now())
 
 class CreateUser:
     """Create a new user."""

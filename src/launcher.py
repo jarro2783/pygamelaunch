@@ -36,6 +36,7 @@ class InvalidUser(Exception):
 
 class GameLauncher:
     #pylint: disable=too-many-instance-attributes
+    #pylint: disable=too-many-public-methods
     """The main game launcher class."""
 
     LoginLine = 3
@@ -160,6 +161,15 @@ class GameLauncher:
         """Get the screen."""
         return self.__window
 
+    def __log_login_attempt(self, user, success):
+        """Logs a login attempt."""
+        sess = self.__database.begin()
+
+        attempt = db.Logins(username=user, success=success)
+        sess.add(attempt)
+        sess.commit()
+        sess.close()
+
     def login(self, user, password):
         """Try to login."""
         sess = self.__database.begin()
@@ -173,6 +183,8 @@ class GameLauncher:
             if hashed == existing:
                 self.__pop_menu()
                 self.__do_login(user)
+                sess.close()
+                self.__log_login_attempt(user, True)
                 return
         else:
             # Hash something anyway to not give away the non-existence
@@ -180,6 +192,8 @@ class GameLauncher:
             bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
 
         # we get here if not logged in
+        sess.close()
+        self.__log_login_attempt(user, False)
         self.redraw()
 
     def __do_login(self, user):
