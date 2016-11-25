@@ -475,7 +475,6 @@ class GameLauncher:
 
         try:
             playing = query.one()
-            # we need to watch the file recorded in playing
             self.__termplay(playing.username)
         except NoResultFound:
             # that player is not actually playing
