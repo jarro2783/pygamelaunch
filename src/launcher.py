@@ -519,13 +519,14 @@ class WatchMenu:
 
 class KeyInput:
     """Base class for handling key input."""
-    def __init__(self, echo, key, message, nextmenu):
+    def __init__(self, echo, key, message, nextmenu, help=[]):
         self.__text = ""
         self.__echo = echo
         self.__next = nextmenu
         self.__values = {}
         self.__key = key
         self.__message = message + " Empty input cancels."
+        self.__help = help
 
     def key(self, key, app):
         """Handle a key press."""
@@ -567,7 +568,21 @@ class KeyInput:
 
     def draw(self, app):
         """Draw the actual key input menu."""
+
+        # Draw the hint message
         app.screen().addstr(1, 1, self.__message)
+
+        # Draw the help under the cursor
+        row = 5
+        for paragraph in self.__help:
+            wrapped = textwrap.wrap(paragraph)
+            for line in wrapped:
+                app.screen().addstr(row, 1, line)
+                row += 1
+
+            row += 1
+
+        # Put the cursor in place for input
         app.screen().move(3, 1)
 
 class UserNameMenu(KeyInput):
@@ -578,7 +593,19 @@ class UserNameMenu(KeyInput):
 class PasswordMenu(KeyInput):
     """A menu that takes a password as input."""
     def __init__(self, nextmenu):
-        super().__init__(False, "password", "Enter your password.", nextmenu)
+        super().__init__(
+            False,
+            "password",
+            "Enter your password.",
+            nextmenu,
+            help=[
+                'Your password should be a unique memorable phrase.',
+                '''If you forget your password, send us an email from your
+                registered email address and we will reset it.''',
+                '''We store your password using 12 rounds of bcrypt, and it
+                is transmitted securely with SSH, but you should probably
+                not reuse passwords anyway.''',
+            ])
 
 class DoLoginMenu:
     #pylint: disable=too-few-public-methods
@@ -599,7 +626,15 @@ class DoRegisterMenu:
 class EmailMenu(KeyInput):
     """A menu that takes an email address."""
     def __init__(self, nextmenu):
-        super().__init__(True, "email", "Enter your email address.", nextmenu)
+        super().__init__(
+            True,
+            "email",
+            "Enter your email address.",
+            nextmenu,
+            help=[
+                '''We will never send you email, except if you ask us to
+                reset your password.'''
+            ])
 
 class ChangePasswordMenu:
     #pylint: disable=too-few-public-methods
