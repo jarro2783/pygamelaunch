@@ -519,14 +519,19 @@ class WatchMenu:
 
 class KeyInput:
     """Base class for handling key input."""
-    def __init__(self, echo, key, message, nextmenu, help=[]):
+    #pylint: disable=too-many-arguments
+    def __init__(self, echo, key, message, nextmenu, hint=None):
         self.__text = ""
         self.__echo = echo
         self.__next = nextmenu
         self.__values = {}
         self.__key = key
         self.__message = message + " Empty input cancels."
-        self.__help = help
+
+        if hint is None:
+            hint = []
+
+        self.__help = hint
 
     def key(self, key, app):
         """Handle a key press."""
@@ -592,20 +597,13 @@ class UserNameMenu(KeyInput):
 
 class PasswordMenu(KeyInput):
     """A menu that takes a password as input."""
-    def __init__(self, nextmenu):
+    def __init__(self, nextmenu, hint=None):
         super().__init__(
             False,
             "password",
             "Enter your password.",
             nextmenu,
-            help=[
-                'Your password should be a unique memorable phrase.',
-                '''If you forget your password, send us an email from your
-                registered email address and we will reset it.''',
-                '''We store your password using 12 rounds of bcrypt, and it
-                is transmitted securely with SSH, but you should probably
-                not reuse passwords anyway.''',
-            ])
+            hint=hint)
 
 class DoLoginMenu:
     #pylint: disable=too-few-public-methods
@@ -631,7 +629,7 @@ class EmailMenu(KeyInput):
             "email",
             "Enter your email address.",
             nextmenu,
-            help=[
+            hint=[
                 '''We will never send you email, except if you ask us to
                 reset your password.'''
             ])
@@ -684,7 +682,18 @@ class ChoiceRunner:
 
     def register(self, _):
         """Register a user."""
-        menu = UserNameMenu(PasswordMenu(EmailMenu(DoRegisterMenu())))
+
+        password_hint = [
+            'Your password should be a unique memorable phrase.',
+            '''If you forget your password, send us an email from your
+            registered email address and we will reset it.''',
+            '''We store your password using 12 rounds of bcrypt, and it
+            is transmitted securely with SSH, but you should probably
+            not reuse passwords anyway.''',
+        ]
+        menu = UserNameMenu(PasswordMenu(
+            EmailMenu(DoRegisterMenu()),
+            password_hint))
         self.__app.push_menu(menu)
 
     def edit(self, args):
