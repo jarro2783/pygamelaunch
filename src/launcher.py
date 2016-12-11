@@ -20,6 +20,7 @@ import sys
 from jinja2 import Template
 import textwrap
 import time
+import traceback
 import tty
 import yaml
 
@@ -509,7 +510,7 @@ class WatchMenu:
         if len(playing) == 0:
             message = "It looks like no-one is playing right now."
             app.screen().addstr(self.offset + row, 1, message)
-        else: 
+        else:
             for player in playing:
                 self.draw_row(app, player, row)
                 row += 1
@@ -823,4 +824,11 @@ def main():
     curses.wrapper(run)
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    # pylint: disable=bare-except
+    except:
+        traceback.print_exc(file=sys.stderr)
+        print("Oops! It looks like pygamelaunch has died.")
+        print("Please report the above output at " +
+              "github.com/jarro2783/pygamelaunch")
