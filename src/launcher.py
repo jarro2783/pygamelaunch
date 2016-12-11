@@ -484,6 +484,11 @@ class GameLauncher:
 class WatchMenu:
     """The menu to watch other games."""
     offset = 2
+    help_message = [
+        "Select a game to play with the alphabetic keys."
+        "Press q to quit this menu."
+    ]
+
     def __init__(self):
         self.__playing = []
 
@@ -492,7 +497,7 @@ class WatchMenu:
         user = player[1]
         screen = app.screen()
         screen.addstr(
-            1, self.offset + row,
+            self.offset + row, 1,
             "{})  {}".format(chr(row + ord('a')), user.username))
 
     def update_playing(self, app):
@@ -501,8 +506,19 @@ class WatchMenu:
         self.__playing = playing
 
         row = 0
-        for player in playing:
-            self.draw_row(app, player, row)
+        if len(playing) == 0:
+            message = "It looks like no-one is playing right now."
+            app.screen().addstr(self.offset + row, 1, message)
+        else: 
+            for player in playing:
+                self.draw_row(app, player, row)
+                row += 1
+
+        # Draw the help
+        row += 1
+        for line in self.help_message:
+            app.screen().addstr(self.offset + row, 1, line)
+            row += 1
 
     def draw(self, app):
         """Draw the watch menu."""
