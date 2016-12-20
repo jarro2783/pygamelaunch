@@ -464,10 +464,9 @@ class GameLauncher:
             os.kill(pid, signal.SIGTERM)
             #os.waitpid(pid, 0)
 
-    @staticmethod
     def __termplay(user):
         """Watch a game."""
-        gamelaunch.watch('localhost', '34234', user)
+        gamelaunch.watch(self.__record_host, self.__record_port, user)
 
     def watch(self, userid):
         """Watch the game being played by userid."""
@@ -819,8 +818,13 @@ def run(scr):
 
     game.run()
 
+def handle_interrupt(sig, frame):
+    """We don't want keyboard interrupts to do anything."""
+    pass
+
 def main():
     """The main function which calls the curses wrapper."""
+    signal.signal(signal.SIGINT, handle_interrupt)
     curses.wrapper(run)
 
 if __name__ == "__main__":
