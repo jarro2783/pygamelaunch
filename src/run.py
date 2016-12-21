@@ -16,4 +16,3 @@ except:
     print("Oops! It looks like pygamelaunch has died.")
     print("Please report the above output at " +
           "github.com/jarro2783/pygamelaunch")
-    

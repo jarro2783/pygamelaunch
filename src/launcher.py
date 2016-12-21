@@ -92,7 +92,8 @@ class GameLauncher:
         rowy = self.WinStart
 
         self.__window = curses.newwin(height - rowy - 1, width, rowy, 0)
-        scr.addstr(1, 1, "Pygamelaunch", curses.A_UNDERLINE)
+        scr.addstr(1, 1, "Pygamelaunch v{}".format(VERSION),
+                   curses.A_UNDERLINE)
 
         if self.__user != "":
             self.__logged_in("Logged in as {}".format(self.__user))
@@ -464,7 +465,7 @@ class GameLauncher:
             os.kill(pid, signal.SIGTERM)
             #os.waitpid(pid, 0)
 
-    def __termplay(user):
+    def __termplay(self, user):
         """Watch a game."""
         gamelaunch.watch(self.__record_host, self.__record_port, user)
 
@@ -789,14 +790,17 @@ class Menu:
 
         # Draw the news
         if self.__news is not None:
-            news = textwrap.wrap(self.__news)
             i += 1
             #pylint: disable=no-member
             scr.hline(i, 1, curses.ACS_HLINE, 77)
-            i += 2
-            for line in news:
-                scr.addstr(i, 1, line)
+            i += 1
+
+            for paragraph in self.__news:
+                news = textwrap.wrap(paragraph)
                 i += 1
+                for line in news:
+                    scr.addstr(i, 1, line)
+                    i += 1
 
     def key(self, pressed, _):
         """Called on a key press."""
@@ -818,7 +822,7 @@ def run(scr):
 
     game.run()
 
-def handle_interrupt(sig, frame):
+def handle_interrupt(*_):
     """We don't want keyboard interrupts to do anything."""
     pass
 

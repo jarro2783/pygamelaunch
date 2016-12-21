@@ -47,8 +47,10 @@ menus:
       - *login
       - *watch
       - *quit
-    news: >
-      Welcome to AusNethack. This server is currently being tested.
+    news:
+      - Welcome to AusNethack. This server is currently being tested.
+      - Please report any bugs, with the version of pygamelaunch to
+        jarro.2783@gmail.com.
 
   loggedin:
     items:
