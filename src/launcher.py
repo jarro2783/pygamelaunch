@@ -24,7 +24,7 @@ import traceback
 import tty
 import yaml
 
-VERSION = 0.1
+VERSION = "0.1.0"
 
 def render_template(text: str, **kwargs) -> str:
     """Renders a template with the given arguments."""
