@@ -12,6 +12,7 @@ import curses
 import curses.ascii
 from gamelaunch import db
 import gamelaunch
+import info
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
 import os
@@ -56,7 +57,6 @@ class GameLauncher:
         self.__exiting = False
         self.__user = ""
         self.__menus = menus
-        self.__template_args = {}
 
         self.__database = db.Database()
         self.__session = None
@@ -68,6 +68,11 @@ class GameLauncher:
         else:
             self.__record_host = 'localhost'
             self.__record_port = 34234
+
+        self.__template_args = {}
+
+        if 'contact' in config:
+            self.__template_args['contact'] = config['contact']
 
         self.__init_games(config['games'])
 
@@ -351,9 +356,12 @@ class GameLauncher:
             else:
                 args.append(self.render_template(game_args))
 
-        self.__start_playing()
-        self.__docker(docker, game['image'], args)
-        self.__stop_playing()
+        try:
+            self.__start_playing()
+            self.__docker(docker, game['image'], args)
+            self.__stop_playing()
+        except IntegrityError:
+            self.push_menu(InformationMenu(self, info.ALREADY_PLAYING))
 
     def __start_playing(self):
         """The current user has started playing."""
@@ -752,6 +760,34 @@ class ChoiceRunner:
         "changeemail" : changeemail,
         "watch" : watch
     }
+
+class InformationMenu:
+    """ A generic menu for showing information to the user."""
+
+    def __init__(self, app, text: list):
+        self.__app = app
+
+        rendered = []
+
+        for paragraph in text:
+            rendered.append(textwrap.wrap(app.render_template(paragraph)))
+
+        self.__text = rendered
+
+    def key(self, _, app):
+        """ Called on key press, just pops the menu."""
+        self.__app.pop_menu()
+
+    def draw(self, app):
+        """ Draw the menu."""
+        row = 1
+        screen = app.screen()
+
+        for paragraph in self.__text:
+            for line in paragraph:
+                screen.addstr(row, 1, line)
+                row += 1
+            row += 1
 
 class Menu:
     """The main game menu class."""

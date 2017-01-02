@@ -40,6 +40,8 @@ actions:
     mkdir -p /home/pygame/users/{{user}}/ttyrec
     cp /home/pygame/nh360config.txt /home/pygame/users/{{user}}/nh360config.txt
 
+contact: 'jarro.2783@gmail.com'
+
 menus:
   main:
     items:
