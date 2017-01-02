@@ -68,9 +68,9 @@ games:
         - *options
         - *play
         - *return
-      news: >
-        Welcome to Nethack 3.6.0. This is mostly vanilla Nethack, with
-        just a few additions to track game statistics.
+      news:
+        - Welcome to Nethack 3.6.0. This is mostly vanilla Nethack, with
+          just a few additions to track game statistics.
 
     root: &nh360root "/home/pygame/nh360"
     options: &nh360options "/home/pygame/users/{{user}}/nh360config.txt"
