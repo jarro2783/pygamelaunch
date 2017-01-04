@@ -64,6 +64,11 @@ class GameLauncher:
         else:
             self.__actions = {}
 
+        if 'idle_time' in config:
+            self.__idle_time = config['idle_time']
+        else:
+            self.__idle_time = 60
+
         self.__scr = scr
         self.__menustack = []
         self.__exiting = False
@@ -100,6 +105,7 @@ class GameLauncher:
         signal.signal(signal.SIGHUP, self.__killed)
         signal.signal(signal.SIGTERM, self.__killed)
         signal.signal(signal.SIGINT, self.__killed)
+        signal.signal(signal.SIGALRM, self.__killed)
 
     def __killed(self, sig, _):
         if self.__container is not None:
@@ -358,7 +364,8 @@ class GameLauncher:
             docker,
             self.__record_host,
             "{}".format(self.__record_port),
-            self.__user)
+            self.__user,
+            self.__idle_time)
         self.__scr = curses.initscr()
         self.__init_curses()
 

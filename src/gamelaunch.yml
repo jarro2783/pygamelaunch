@@ -41,6 +41,7 @@ actions:
     cp /home/pygame/nh360config.txt /home/pygame/users/{{user}}/nh360config.txt
 
 contact: 'jarro.2783@gmail.com'
+idle_time: 5
 
 menus:
   main:

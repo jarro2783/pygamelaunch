@@ -3,12 +3,14 @@
 import os
 import pyterm
 
+#pylint: disable=too-many-arguments
 def rungame(
         program,
         arguments,
         record_host,
         record_port,
-        record_user):
+        record_user,
+        idle_time):
     """Run a game."""
 
     executor = pyterm.ExecProgram(program, *arguments)
@@ -16,7 +18,7 @@ def rungame(
         "termrecord_client",
         "-host", record_host, "-port", record_port,
         "-user", record_user, "-send")
-    capture = pyterm.Capture(executor, writers=[net_writer])
+    capture = pyterm.Capture(executor, idle_time, [net_writer])
     capture.run()
 
 def watch(server, port, watch_user):
