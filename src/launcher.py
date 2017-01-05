@@ -16,6 +16,7 @@ import info
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
 import os
+import re
 import signal
 import sys
 from jinja2 import Template
@@ -26,6 +27,9 @@ import tty
 import yaml
 
 VERSION = "0.1.0"
+
+def sanitize(word):
+    return re.sub('[^A-Za-z0-9]', '', word)
 
 def render_template(text: str, **kwargs) -> str:
     """Renders a template with the given arguments."""
@@ -355,6 +359,13 @@ class GameLauncher:
                 args.extend(self.render_template(game_args))
             else:
                 args.append(self.render_template(game_args))
+
+        docker.extend([
+            "--name",
+            self.render_template("{{game}}-{{user}}",
+                                 game=sanitize(game['name']),
+                                 user=sanitize(self.__user))
+        ])
 
         try:
             self.__start_playing()
