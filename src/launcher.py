@@ -29,6 +29,7 @@ import yaml
 VERSION = "0.1.0"
 
 def sanitize(word):
+    """ Sanitize a string to only have alphanumeric characters."""
     return re.sub('[^A-Za-z0-9]', '', word)
 
 def render_template(text: str, **kwargs) -> str:
@@ -776,8 +777,6 @@ class InformationMenu:
     """ A generic menu for showing information to the user."""
 
     def __init__(self, app, text: list):
-        self.__app = app
-
         rendered = []
 
         for paragraph in text:
@@ -785,9 +784,10 @@ class InformationMenu:
 
         self.__text = rendered
 
-    def key(self, _, app):
+    @staticmethod
+    def key(_, app):
         """ Called on key press, just pops the menu."""
-        self.__app.pop_menu()
+        app.pop_menu()
 
     def draw(self, app):
         """ Draw the menu."""
