@@ -74,6 +74,9 @@ games:
         - Welcome to Nethack 3.6.0. This is mostly vanilla Nethack, with
           just a few additions to track game statistics.
 
+    precmd:
+      - cp "/home/pygame/nh360/game/save/0{{user}}.gz" "/home/pygame/nh360/game/save/0{{user}}.gz.bak"
+
     root: &nh360root "/home/pygame/nh360"
     options: &nh360options "/home/pygame/users/{{user}}/nh360config.txt"
     volumes: 

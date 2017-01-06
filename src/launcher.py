@@ -10,6 +10,7 @@ gamelaunch.yml.
 import bcrypt
 import curses
 import curses.ascii
+import datetime
 from gamelaunch import db
 import gamelaunch
 import info
@@ -27,6 +28,12 @@ import tty
 import yaml
 
 VERSION = "0.1.0"
+
+logfile = open("/home/pygame/gamelaunch.log", "a")
+
+def log(string, game="Launcher"):
+    thetime = datetime.datetime.now()
+    logfile.write("{}:{}:{}\n".format(thetime, game, string))
 
 def sanitize(word):
     """ Sanitize a string to only have alphanumeric characters."""
@@ -370,6 +377,14 @@ class GameLauncher:
 
         try:
             self.__start_playing()
+
+            if 'precmd' in game:
+                for action in game['precmd']:
+                    command = "bash -c '" + self.render_template(action) + "'"
+                    log("Running " + command, game['name'])
+                    pipe = os.popen(command, "r")
+                    pipe.read()
+                    pipe.close()
             self.__docker(docker, game['image'], args)
             self.__stop_playing()
         except IntegrityError:
