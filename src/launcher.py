@@ -502,10 +502,15 @@ class GameLauncher:
 
     def __termplay(self, user):
         """Watch a game."""
+        curses.endwin()
+
         gamelaunch.watch(
             self.__record_host,
             "{}".format(self.__record_port),
             user)
+
+        self.__scr = curses.initscr()
+        self.__init_curses()
 
     def watch(self, userid):
         """Watch the game being played by userid."""
@@ -525,8 +530,8 @@ class WatchMenu:
     offset = 2
     help_message = [
         "Select a game to play with the alphabetic keys.",
-        "Press q to quit this menu."
-        "Press q at any time to stop watching."
+        "Press q to quit this menu.",
+        "Press `Enter` at any time to stop watching."
     ]
 
     def __init__(self):
