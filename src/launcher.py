@@ -502,7 +502,10 @@ class GameLauncher:
 
     def __termplay(self, user):
         """Watch a game."""
-        gamelaunch.watch(self.__record_host, self.__record_port, user)
+        gamelaunch.watch(
+            self.__record_host,
+            "{}".format(self.__record_port),
+            user)
 
     def watch(self, userid):
         """Watch the game being played by userid."""
