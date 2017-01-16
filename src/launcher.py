@@ -521,8 +521,9 @@ class WatchMenu:
     """The menu to watch other games."""
     offset = 2
     help_message = [
-        "Select a game to play with the alphabetic keys."
+        "Select a game to play with the alphabetic keys.",
         "Press q to quit this menu."
+        "Press q at any time to stop watching."
     ]
 
     def __init__(self):
@@ -545,16 +546,18 @@ class WatchMenu:
         if len(playing) == 0:
             message = "It looks like no-one is playing right now."
             app.screen().addstr(self.offset + row, 1, message)
+            row += 1
         else:
             for player in playing:
                 self.draw_row(app, player, row)
                 row += 1
 
         # Draw the help
-        row += 1
-        for line in self.help_message:
-            app.screen().addstr(self.offset + row, 1, line)
+        if len(playing) > 0:
             row += 1
+            for line in self.help_message:
+                app.screen().addstr(self.offset + row, 1, line)
+                row += 1
 
     def draw(self, app):
         """Draw the watch menu."""
