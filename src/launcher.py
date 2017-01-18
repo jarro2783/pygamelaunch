@@ -510,6 +510,9 @@ class GameLauncher:
             "{}".format(self.__record_port),
             user)
 
+        # clear the screen
+        print("\033[2J", end='')
+
         self.__scr = curses.initscr()
         self.__init_curses()
 
