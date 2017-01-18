@@ -1,5 +1,6 @@
 """A game launcher module."""
 
+import os
 import pyterm
 
 def rungame(
@@ -32,3 +33,16 @@ def watch(server, port, watch_user):
             "-watch"
         ])
     watcher.watch()
+
+def execwait(prog, *args):
+    pid = os.fork()
+
+    if pid == 0:
+        os.close(0)
+        os.close(1)
+        os.close(2)
+
+        os.execlp(prog, *args)
+        os.exit(1)
+    else:
+        os.waitpid(pid, 0)

@@ -92,6 +92,25 @@ class GameLauncher:
 
         self.push_menu("main")
 
+        self.__container = None
+
+        # Register handlers to send SIGHUP to games.
+        # This would not be necessary if docker passed signals.
+        # See https://github.com/docker/docker/issues/28872
+        signal.signal(signal.SIGHUP, self.__killed)
+        signal.signal(signal.SIGTERM, self.__killed)
+        signal.signal(signal.SIGINT, self.__killed)
+
+    def __killed(self, sig, _):
+        if self.__container is not None:
+            gamelaunch.execwait("docker", "docker", "kill", "-s", "SIGHUP",
+                                self.__container)
+            self.__exiting = True
+        else:
+            # kill with the default action if we are not running a game
+            signal.signal(sig, signal.SIG_DFL)
+            os.kill(os.getpid(), sig)
+
     def user(self):
         """Get the logged in user."""
         return self.__user
