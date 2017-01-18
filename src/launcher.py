@@ -497,29 +497,6 @@ class GameLauncher:
         self.status("Email changed")
         self.__commit_session()
 
-    @staticmethod
-    def __child(_, frame):
-        """Debugging sigchld."""
-        print(frame)
-        os.waitpid(frame.f_locals['pid'], 0)
-
-    def __playexec(self, binary, args):
-        """Execute the game watcher."""
-        pid = os.fork()
-        signal.signal(signal.SIGCHLD, self.__child)
-        if pid == 0:
-            sys.stdin.close()
-            os.execvp(binary, args)
-        else:
-            tty.setraw(sys.stdin.fileno())
-            while True:
-                char = sys.stdin.read(1)
-                if char == 'q':
-                    break
-            signal.signal(signal.SIGCHLD, signal.SIG_IGN)
-            os.kill(pid, signal.SIGTERM)
-            #os.waitpid(pid, 0)
-
     def __termplay(self, user):
         """Watch a game."""
         curses.endwin()
@@ -553,7 +530,7 @@ class WatchMenu:
     offset = 2
     help_message = [
         "Select a game to play with the alphabetic keys.",
-        "Press `Enter` at any time to stop watching."
+        "Press any key to stop watching."
     ]
 
     def __init__(self):
