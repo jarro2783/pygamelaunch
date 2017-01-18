@@ -53,8 +53,7 @@ menus:
       - Welcome to AusNethack. This server is currently being tested.
       - Please report any bugs, with the version of pygamelaunch to
         jarro.2783@gmail.com.
-      - "2017-01-17: watching a game is currently buggy, this will be
-        fixed soon."
+      - "2017-01-18: watching a game has been fixed."
 
   loggedin:
     items:

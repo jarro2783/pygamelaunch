@@ -368,15 +368,15 @@ class GameLauncher:
             else:
                 args.append(self.render_template(game_args))
 
-        docker.extend([
-            "--name",
-            self.render_template("{{game}}-{{user}}",
-                                 game=sanitize(game['name']),
-                                 user=sanitize(self.__user))
-        ])
+        container_name = self.render_template("{{game}}-{{user}}",
+                                              game=sanitize(game['name']),
+                                              user=sanitize(self.__user))
+
+        docker.extend(["--name", container_name])
 
         try:
             self.__start_playing()
+            self.__container = container_name
 
             if 'precmd' in game:
                 for action in game['precmd']:
@@ -386,6 +386,7 @@ class GameLauncher:
                     pipe.read()
                     pipe.close()
             self.__docker(docker, game['image'], args)
+            self.__container = None
             self.__stop_playing()
         except IntegrityError:
             self.push_menu(InformationMenu(self, info.ALREADY_PLAYING))
@@ -530,7 +531,6 @@ class WatchMenu:
     offset = 2
     help_message = [
         "Select a game to play with the alphabetic keys.",
-        "Press q to quit this menu.",
         "Press `Enter` at any time to stop watching."
     ]
 
@@ -559,6 +559,13 @@ class WatchMenu:
             for player in playing:
                 self.draw_row(app, player, row)
                 row += 1
+
+        row += 1
+        app.screen().addstr(
+            self.offset + row,
+            1,
+            "Press q to quit this menu.")
+        row += 1
 
         # Draw the help
         if len(playing) > 0:
